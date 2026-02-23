@@ -42,3 +42,54 @@ func GetBoards(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, boards)
 }
+
+// UpdateBoard changes the title of an existing board
+func UpdateBoard(c *gin.Context) {
+    userID := c.MustGet("userID").(int)
+    boardID := c.Param("id")
+    var input struct {
+        Title string `json:"title" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Title is required"})
+        return
+    }
+
+    // Verify ownership before updating
+    query := "UPDATE boards SET title = ? WHERE id = ? AND owner_id = ?"
+    result, err := database.DB.Exec(query, input.Title, boardID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        return
+    }
+
+    rowsAffected, _ := result.RowsAffected()
+    if rowsAffected == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Board not found or unauthorized"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Board updated"})
+}
+
+// DeleteBoard removes a board and all its associated lists/cards
+func DeleteBoard(c *gin.Context) {
+    userID := c.MustGet("userID").(int)
+    boardID := c.Param("id")
+
+    query := "DELETE FROM boards WHERE id = ? AND owner_id = ?"
+    result, err := database.DB.Exec(query, boardID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        return
+    }
+
+    rowsAffected, _ := result.RowsAffected()
+    if rowsAffected == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Board not found or unauthorized"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Board deleted"})
+}

@@ -68,3 +68,51 @@ func GetListsByBoard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, lists)
 }
+
+// UpdateList changes the title of a list
+func UpdateList(c *gin.Context) {
+    userID := c.MustGet("userID").(int)
+    listID := c.Param("id")
+    var input struct {
+        Title string `json:"title" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Title is required"})
+        return
+    }
+
+    // Security check via JOIN with boards
+    query := `
+        UPDATE lists l 
+        JOIN boards b ON l.board_id = b.id 
+        SET l.title = ? 
+        WHERE l.id = ? AND b.owner_id = ?`
+    
+    _, err := database.DB.Exec(query, input.Title, listID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "List updated"})
+}
+
+// DeleteList removes a list and its cards
+func DeleteList(c *gin.Context) {
+    userID := c.MustGet("userID").(int)
+    listID := c.Param("id")
+
+    query := `
+        DELETE l FROM lists l 
+        JOIN boards b ON l.board_id = b.id 
+        WHERE l.id = ? AND b.owner_id = ?`
+    
+    _, err := database.DB.Exec(query, listID, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "List deleted"})
+}

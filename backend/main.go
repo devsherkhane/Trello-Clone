@@ -12,8 +12,8 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found")
-    }
+		log.Println("No .env file found")
+	}
 
 	// 2. Initialize the database connection
 	database.InitDB()
@@ -38,21 +38,32 @@ func main() {
 
 	// Protected Routes (Require JWT)
 	api := r.Group("/api")
-	api.Use(auth.AuthMiddleware()) 
+	api.Use(auth.AuthMiddleware())
 	{
 		// Board Routes
 		api.POST("/boards", handlers.CreateBoard)
 		api.GET("/boards", handlers.GetBoards)
+		api.PUT("/boards/:id", handlers.UpdateBoard)
+		api.DELETE("/boards/:id", handlers.DeleteBoard)
 
 		// List Routes
 		api.POST("/lists", handlers.CreateList)
 		api.GET("/boards/:id/lists", handlers.GetListsByBoard)
+		// Inside main.go api group
+		api.PUT("/lists/:id", handlers.UpdateList)
+		api.DELETE("/lists/:id", handlers.DeleteList)
 
 		// Ping for testing
 		api.GET("/ping", func(c *gin.Context) {
 			userID := c.MustGet("userID")
 			c.JSON(200, gin.H{"user_id": userID})
 		})
+
+		api.POST("/cards", handlers.CreateCard)
+		api.GET("/lists/:id/cards", handlers.GetCardsByList)
+		api.PUT("/cards/:id", handlers.UpdateCard)
+		api.DELETE("/cards/:id", handlers.DeleteCard)
+		api.PATCH("/cards/:id/move", handlers.MoveCard)
 	}
 
 	// 4. Run the server on port 8080
