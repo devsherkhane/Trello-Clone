@@ -8,6 +8,7 @@ import (
 	"github.com/devsherkhane/trello-clone/internal/handlers"
 	"github.com/devsherkhane/trello-clone/internal/logger"
 	"github.com/devsherkhane/trello-clone/internal/middleware"
+	"github.com/devsherkhane/trello-clone/internal/notifications"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -76,6 +77,9 @@ func main() {
 
 		api.POST("/attachments", handlers.UploadAttachment)
 		api.GET("/boards/:id/activity", handlers.GetActivityLogs)
+
+		api.GET("/ws", notifications.GlobalHub.HandleWS) 
+		api.GET("/boards/:id/export", handlers.ExportBoardCSV)
 
 	}
 
