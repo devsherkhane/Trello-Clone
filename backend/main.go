@@ -11,8 +11,19 @@ import (
 	"github.com/devsherkhane/trello-clone/internal/notifications"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
+// @title Trello Clone API
+// @version 1.0
+// @description Backend API for Trello Clone with Boards, Lists, Cards, and Real-time updates.
+// @host localhost:8080
+// @BasePath /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
@@ -22,6 +33,7 @@ func main() {
 	database.InitDB()
 
 	r := gin.Default()
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.Static("/uploads", "./uploads")
 
@@ -84,7 +96,19 @@ func main() {
 
 		api.POST("/boards/:id/collaborators", handlers.AddCollaborator)
 		api.PATCH("/boards/:id/archive", handlers.ArchiveBoard)
+		api.POST("/comments", handlers.CreateComment)
+		api.GET("/cards/:id/comments", handlers.GetCommentsByCard)
 
+		api.POST("/2fa/setup", handlers.Setup2FA)
+		api.POST("/cards/labels", handlers.AddLabelToCard)
+
+		api.GET("/search/advanced", handlers.AdvancedSearch)
+		api.POST("/addlabel", handlers.AddLabelToCard)
+
+		api.POST("/user/avatar", handlers.UploadAvatar)
+
+		r.POST("/api/forgot-password", handlers.ForgotPassword)
+		r.POST("/api/reset-password", handlers.ResetPassword)
 	}
 
 	// 4. Run the server on port 8080

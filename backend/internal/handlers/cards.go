@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/devsherkhane/trello-clone/internal/database"
 	"github.com/devsherkhane/trello-clone/internal/models"
@@ -11,7 +12,15 @@ import (
 	"github.com/devsherkhane/trello-clone/internal/utils"
 	"github.com/gin-gonic/gin"
 )
-
+// CreateCard godoc
+// @Summary Create a new card
+// @Tags Cards
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param card body models.Card true "Card Object"
+// @Success 201 {object} models.Card
+// @Router /cards [post]
 func CreateCard(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	var input struct {
@@ -253,4 +262,153 @@ func SearchCards(c *gin.Context) {
 		"page":  page,
 		"limit": limit,
 	})
+}
+
+func AdvancedSearch(c *gin.Context) {
+	// 1. Get UserID from the JWT context
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// 2. Define the Base Query
+	// We use DISTINCT to avoid duplicate cards when multiple labels match
+	query := `
+		SELECT DISTINCT c.id, c.list_id, c.title, c.description, c.position, c.due_date
+		FROM cards c
+		JOIN lists l ON c.list_id = l.id
+		JOIN boards b ON l.board_id = b.id
+		LEFT JOIN card_labels cl ON c.id = cl.card_id
+		WHERE (b.owner_id = ? OR EXISTS(
+			SELECT 1 FROM board_collaborators 
+			WHERE board_id = b.id AND user_id = ?
+		))`
+
+	var args []interface{}
+	args = append(args, userID.(int), userID.(int))
+
+	// 3. Apply Dynamic Filters based on Query Parameters
+
+	// Filter by Label
+	if labelID := c.Query("label_id"); labelID != "" {
+		query += " AND cl.label_id = ?"
+		args = append(args, labelID)
+	}
+
+	// Filter by Overdue status
+	if isOverdue := c.Query("overdue"); isOverdue == "true" {
+		query += " AND c.due_date < NOW() AND c.due_date IS NOT NULL"
+	}
+
+	// Filter by Search Term (Title or Description)
+	if searchTerm := c.Query("q"); searchTerm != "" {
+		query += " AND (c.title LIKE ? OR c.description LIKE ?)"
+		likePattern := "%" + searchTerm + "%"
+		args = append(args, likePattern, likePattern)
+	}
+
+	// 4. Execute the Query
+	rows, err := database.DB.Query(query, args...)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute search"})
+		return
+	}
+	defer rows.Close()
+
+	// 5. Scan results into a slice
+	var cards []models.Card
+	for rows.Next() {
+		var card models.Card
+		// Note: Ensure your models.Card struct has a DueDate field (likely *time.Time or string)
+		err := rows.Scan(
+			&card.ID,
+			&card.ListID,
+			&card.Title,
+			&card.Description,
+			&card.Position,
+			&card.DueDate,
+		)
+		if err != nil {
+			continue
+		}
+		cards = append(cards, card)
+	}
+
+	// 6. Return the results
+	if cards == nil {
+		cards = []models.Card{} // Return empty array instead of null
+	}
+	c.JSON(http.StatusOK, cards)
+}
+
+// BatchUpdateCards handles moving or archiving multiple cards at once
+func BatchUpdateCards(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+
+	var input struct {
+		CardIDs []int  `json:"card_ids" binding:"required"`
+		Action  string `json:"action" binding:"required"` // "move", "archive", "delete"
+		ListID  int    `json:"list_id"`                   // Required for "move"
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Security: Ensure the user has permission for ALL these cards
+	// We use an IN clause and count to verify ownership/collaboration
+	var count int
+	verifyQuery := `
+    SELECT COUNT(DISTINCT c.id) 
+    FROM cards c
+    JOIN lists l ON c.list_id = l.id
+    JOIN boards b ON l.board_id = b.id
+    WHERE c.id IN (?) AND (b.owner_id = ? OR EXISTS(
+        SELECT 1 FROM board_collaborators WHERE board_id = b.id AND user_id = ?
+    ))`
+
+	// Use our helper to expand the IN clause
+	query, args := PrepareIn(verifyQuery, input.CardIDs, userID, userID)
+
+	err := database.DB.QueryRow(query, args...).Scan(&count)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Verification failed"})
+		return
+	}
+
+	if count != len(input.CardIDs) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized to modify one or more selected cards"})
+		return
+	}
+
+	// 2. Perform the Action using the same helper
+	if input.Action == "move" {
+		updateQuery, updateArgs := PrepareIn("UPDATE cards SET list_id = ? WHERE id IN (?)", input.CardIDs)
+		// We need to re-order args because list_id comes first in this query
+		finalArgs := append([]interface{}{input.ListID}, updateArgs...)
+		_, err = database.DB.Exec(updateQuery, finalArgs...)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Batch action completed successfully"})
+}
+func PrepareIn(query string, slice []int, otherArgs ...interface{}) (string, []interface{}) {
+	// Create a string of question marks: ?,?,?
+	placeholders := make([]string, len(slice))
+	for i := range placeholders {
+		placeholders[i] = "?"
+	}
+
+	// Replace the first (?) found in the query with the new placeholders
+	query = strings.Replace(query, "(?)", "("+strings.Join(placeholders, ", ")+")", 1)
+
+	// Combine the slice elements and other arguments into one interface slice
+	var args []interface{}
+	for _, id := range slice {
+		args = append(args, id)
+	}
+	args = append(args, otherArgs...)
+
+	return query, args
 }

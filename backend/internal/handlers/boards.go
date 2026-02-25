@@ -232,3 +232,4 @@ func ArchiveBoard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Board status updated"})
 }
+
