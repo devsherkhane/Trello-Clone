@@ -67,6 +67,9 @@ func main() {
 		api.PUT("/cards/:id", handlers.UpdateCard)
 		api.DELETE("/cards/:id", handlers.DeleteCard)
 		api.PATCH("/cards/:id/move", handlers.MoveCard)
+		api.GET("/search", handlers.SearchCards)
+
+		api.PUT("/profile", handlers.UpdateProfile)
 
 	}
 

@@ -97,3 +97,38 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
+
+// UpdateProfile allows a user to change their username or password
+func UpdateProfile(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+	var input struct {
+		Username string `json:"username"`
+		Password string `json:"password" binding:"omitempty,min=6"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Update Username if provided
+	if input.Username != "" {
+		_, err := database.DB.Exec("UPDATE users SET username = ? WHERE user_id = ?", input.Username, userID)
+		if err != nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
+			return
+		}
+	}
+
+	// Update Password if provided (hashed)
+	if input.Password != "" {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		_, err := database.DB.Exec("UPDATE users SET password_hash = ? WHERE user_id = ?", string(hashed), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
+}

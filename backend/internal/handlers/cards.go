@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/devsherkhane/trello-clone/internal/database"
 	"github.com/devsherkhane/trello-clone/internal/models"
@@ -78,106 +79,169 @@ func GetCardsByList(c *gin.Context) {
 
 // UpdateCard modifies a card's title or description
 func UpdateCard(c *gin.Context) {
-    userID := c.MustGet("userID").(int)
-    cardID := c.Param("id")
-    
-    var input struct {
-        Title       string `json:"title"`
-        Description string `json:"description"`
-    }
+	userID := c.MustGet("userID").(int)
+	cardID := c.Param("id")
 
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-        return
-    }
+	var input struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
 
-    // Security Check: Ensure the card belongs to a board owned by this user
-    var ownerID int
-    err := database.DB.QueryRow(`
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Security Check: Ensure the card belongs to a board owned by this user
+	var ownerID int
+	err := database.DB.QueryRow(`
         SELECT b.owner_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         JOIN cards c ON l.id = c.list_id 
         WHERE c.id = ?`, cardID).Scan(&ownerID)
 
-    if err != nil || ownerID != userID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to this card"})
-        return
-    }
+	if err != nil || ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to this card"})
+		return
+	}
 
-    query := "UPDATE cards SET title = ?, description = ? WHERE id = ?"
-    _, err = database.DB.Exec(query, input.Title, input.Description, cardID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update card"})
-        return
-    }
+	query := "UPDATE cards SET title = ?, description = ? WHERE id = ?"
+	_, err = database.DB.Exec(query, input.Title, input.Description, cardID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update card"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "Card updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Card updated successfully"})
 }
 
 // DeleteCard removes a specific card
 func DeleteCard(c *gin.Context) {
-    userID := c.MustGet("userID").(int)
-    cardID := c.Param("id")
+	userID := c.MustGet("userID").(int)
+	cardID := c.Param("id")
 
-    // Security Check
-    var ownerID int
-    err := database.DB.QueryRow(`
+	// Security Check
+	var ownerID int
+	err := database.DB.QueryRow(`
         SELECT b.owner_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         JOIN cards c ON l.id = c.list_id 
         WHERE c.id = ?`, cardID).Scan(&ownerID)
 
-    if err != nil || ownerID != userID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to this card"})
-        return
-    }
+	if err != nil || ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to this card"})
+		return
+	}
 
-    _, err = database.DB.Exec("DELETE FROM cards WHERE id = ?", cardID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete card"})
-        return
-    }
+	_, err = database.DB.Exec("DELETE FROM cards WHERE id = ?", cardID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete card"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "Card deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Card deleted"})
 }
 
 // MoveCard handles updating a card's position or moving it to a different list
 func MoveCard(c *gin.Context) {
-    userID := c.MustGet("userID").(int)
-    cardID := c.Param("id")
+	userID := c.MustGet("userID").(int)
+	cardID := c.Param("id")
 
-    var input struct {
-        NewListID   int `json:"new_list_id" binding:"required"`
-        NewPosition int `json:"new_position"`
-    }
+	var input struct {
+		NewListID   int `json:"new_list_id" binding:"required"`
+		NewPosition int `json:"new_position"`
+	}
 
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-        return
-    }
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
 
-    // Security Check: Ensure the user owns the board where the card is moving
-    var ownerID int
-    err := database.DB.QueryRow(`
+	// Security Check: Ensure the user owns the board where the card is moving
+	var ownerID int
+	err := database.DB.QueryRow(`
         SELECT b.owner_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         WHERE l.id = ?`, input.NewListID).Scan(&ownerID)
 
-    if err != nil || ownerID != userID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to destination list"})
-        return
-    }
+	if err != nil || ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to destination list"})
+		return
+	}
 
-    // Update the card's list and position
-    query := "UPDATE cards SET list_id = ?, position = ? WHERE id = ?"
-    _, err = database.DB.Exec(query, input.NewListID, input.NewPosition, cardID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to move card"})
-        return
-    }
+	// Update the card's list and position
+	query := "UPDATE cards SET list_id = ?, position = ? WHERE id = ?"
+	_, err = database.DB.Exec(query, input.NewListID, input.NewPosition, cardID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to move card"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "Card moved successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Card moved successfully"})
+}
+
+// SearchCards looks for cards matching a query with pagination support
+func SearchCards(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+	queryParam := c.Query("q")
+
+	// Default pagination values
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	var cards []models.Card
+	// SQL query adding LIMIT and OFFSET for pagination
+	sqlQuery := `
+		SELECT c.id, c.list_id, c.title, c.description, c.position 
+		FROM cards c
+		JOIN lists l ON c.list_id = l.id
+		JOIN boards b ON l.board_id = b.id
+		WHERE b.owner_id = ? AND (c.title LIKE ? OR c.description LIKE ?)
+		LIMIT ? OFFSET ?`
+
+	searchTerm := "%" + queryParam + "%"
+	rows, err := database.DB.Query(sqlQuery, userID, searchTerm, searchTerm, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Search failed"})
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var card models.Card
+		if err := rows.Scan(&card.ID, &card.ListID, &card.Title, &card.Description, &card.Position); err != nil {
+			continue
+		}
+		cards = append(cards, card)
+	}
+
+	// Optional: Return total count for frontend progress bars/pagination UI
+	var total int
+	countQuery := `
+		SELECT COUNT(*) FROM cards c
+		JOIN lists l ON c.list_id = l.id
+		JOIN boards b ON l.board_id = b.id
+		WHERE b.owner_id = ? AND (c.title LIKE ? OR c.description LIKE ?)`
+	database.DB.QueryRow(countQuery, userID, searchTerm, searchTerm).Scan(&total)
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  cards,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	})
 }
