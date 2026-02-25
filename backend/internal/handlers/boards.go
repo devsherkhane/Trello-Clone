@@ -7,6 +7,7 @@ import (
 
 	"github.com/devsherkhane/trello-clone/internal/database"
 	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/trello-clone/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,8 +32,10 @@ func CreateBoard(c *gin.Context) {
 
 func GetBoards(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
+	archived := c.Query("archived") == "true"
 	var boards []models.Board
-	rows, err := database.DB.Query("SELECT id, title, owner_id FROM boards WHERE owner_id = ?", userID)
+	query := "SELECT id, title, owner_id FROM boards WHERE owner_id = ? AND is_archived = ?"
+	rows, err := database.DB.Query(query, userID, archived)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -102,14 +105,18 @@ func GetBoard(c *gin.Context) {
 	boardID := c.Param("id")
 
 	var b models.Board
-	query := "SELECT id, title, owner_id FROM boards WHERE id = ? AND owner_id = ?"
-	err := database.DB.QueryRow(query, boardID, userID).Scan(&b.ID, &b.Title, &b.OwnerID)
+	// Check if user is owner OR a collaborator
+	query := `
+        SELECT b.id, b.title, b.owner_id 
+        FROM boards b
+        LEFT JOIN board_collaborators bc ON b.id = bc.board_id
+        WHERE b.id = ? AND (b.owner_id = ? OR bc.user_id = ?)`
 
+	err := database.DB.QueryRow(query, boardID, userID, userID).Scan(&b.ID, &b.Title, &b.OwnerID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Board not found"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
-
 	c.JSON(http.StatusOK, b)
 }
 
@@ -174,4 +181,54 @@ func ExportBoardCSV(c *gin.Context) {
 		writer.Write([]string{listTitle, cardTitle, desc})
 	}
 	writer.Flush()
+}
+
+func AddCollaborator(c *gin.Context) {
+	boardID := c.Param("id")
+
+	var input struct {
+		Email string `json:"email" binding:"required,email"`
+		Role  string `json:"role" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Valid email and role are required"})
+		return
+	}
+
+	// 1. Find the invited user's ID
+	var collaboratorID int
+	err := database.DB.QueryRow("SELECT user_id FROM users WHERE email = ?", input.Email).Scan(&collaboratorID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// 2. Insert into board_collaborators
+	_, err = database.DB.Exec("INSERT INTO board_collaborators (board_id, user_id, role) VALUES (?, ?, ?)", boardID, collaboratorID, input.Role)
+	if err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "User is already a collaborator"})
+		return
+	}
+
+	// 3. Send Email Notification
+	var boardTitle string
+	database.DB.QueryRow("SELECT title FROM boards WHERE id = ?", boardID).Scan(&boardTitle)
+	go utils.SendInvitationEmail(input.Email, boardTitle)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Collaborator added and notified"})
+}
+
+// ArchiveBoard toggles the archived status
+func ArchiveBoard(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+	boardID := c.Param("id")
+
+	_, err := database.DB.Exec("UPDATE boards SET is_archived = NOT is_archived WHERE id = ? AND owner_id = ?", boardID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update board status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Board status updated"})
 }

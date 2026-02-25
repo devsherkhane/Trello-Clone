@@ -78,8 +78,12 @@ func main() {
 		api.POST("/attachments", handlers.UploadAttachment)
 		api.GET("/boards/:id/activity", handlers.GetActivityLogs)
 
-		api.GET("/ws", notifications.GlobalHub.HandleWS) 
+		api.GET("/ws", notifications.GlobalHub.HandleWS)
 		api.GET("/boards/:id/export", handlers.ExportBoardCSV)
+		api.PUT("/user/theme", handlers.UpdateTheme)
+
+		api.POST("/boards/:id/collaborators", handlers.AddCollaborator)
+		api.PATCH("/boards/:id/archive", handlers.ArchiveBoard)
 
 	}
 

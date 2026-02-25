@@ -132,3 +132,22 @@ func UpdateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
+
+func UpdateTheme(c *gin.Context) {
+    userID := c.MustGet("userID").(int)
+    var input struct {
+        Theme string `json:"theme" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Theme is required"})
+        return
+    }
+
+    _, err := database.DB.Exec("UPDATE users SET theme_preference = ? WHERE user_id = ?", input.Theme, userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save preference"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "Theme updated"})
+}
