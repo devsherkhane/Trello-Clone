@@ -11,7 +11,7 @@ type User struct {
 type Board struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
-	OwnerID int    `json:"owner_id"`
+	UserID int    `json:"user_id"`
 }
 
 // List represents a column (e.g., "To Do", "Doing")

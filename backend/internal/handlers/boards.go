@@ -20,9 +20,11 @@ func CreateBoard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Title is required"})
 		return
 	}
-	query := "INSERT INTO boards (title, owner_id) VALUES (?, ?)"
+	query := "INSERT INTO boards (title, user_id) VALUES (?, ?)"
 	result, err := database.DB.Exec(query, input.Title, userID)
 	if err != nil {
+		// ADD THIS LINE
+		fmt.Println("CREATE BOARD DB ERROR:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
@@ -34,16 +36,18 @@ func GetBoards(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	archived := c.Query("archived") == "true"
 	var boards []models.Board
-	query := "SELECT id, title, owner_id FROM boards WHERE owner_id = ? AND is_archived = ?"
+	query := "SELECT id, title, user_id FROM boards WHERE user_id = ? AND is_archived = ?"
 	rows, err := database.DB.Query(query, userID, archived)
 	if err != nil {
+		// ADD THIS LINE
+		fmt.Println("GET BOARDS DB ERROR:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var b models.Board
-		rows.Scan(&b.ID, &b.Title, &b.OwnerID)
+		rows.Scan(&b.ID, &b.Title, &b.UserID)
 		boards = append(boards, b)
 	}
 	c.JSON(http.StatusOK, boards)
@@ -63,7 +67,7 @@ func UpdateBoard(c *gin.Context) {
 	}
 
 	// Verify ownership before updating
-	query := "UPDATE boards SET title = ? WHERE id = ? AND owner_id = ?"
+	query := "UPDATE boards SET title = ? WHERE id = ? AND user_id = ?"
 	result, err := database.DB.Exec(query, input.Title, boardID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
@@ -84,7 +88,7 @@ func DeleteBoard(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	boardID := c.Param("id")
 
-	query := "DELETE FROM boards WHERE id = ? AND owner_id = ?"
+	query := "DELETE FROM boards WHERE id = ? AND user_id = ?"
 	result, err := database.DB.Exec(query, boardID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
@@ -107,12 +111,12 @@ func GetBoard(c *gin.Context) {
 	var b models.Board
 	// Check if user is owner OR a collaborator
 	query := `
-        SELECT b.id, b.title, b.owner_id 
+        SELECT b.id, b.title, b.user_id 
         FROM boards b
         LEFT JOIN board_collaborators bc ON b.id = bc.board_id
-        WHERE b.id = ? AND (b.owner_id = ? OR bc.user_id = ?)`
+        WHERE b.id = ? AND (b.user_id = ? OR bc.user_id = ?)`
 
-	err := database.DB.QueryRow(query, boardID, userID, userID).Scan(&b.ID, &b.Title, &b.OwnerID)
+	err := database.DB.QueryRow(query, boardID, userID, userID).Scan(&b.ID, &b.Title, &b.UserID)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
@@ -127,7 +131,7 @@ func GetActivityLogs(c *gin.Context) {
 
 	// Security Check: Ensure user owns the board
 	var ownerID int
-	err := database.DB.QueryRow("SELECT owner_id FROM boards WHERE id = ?", boardID).Scan(&ownerID)
+	err := database.DB.QueryRow("SELECT user_id FROM boards WHERE id = ?", boardID).Scan(&ownerID)
 	if err != nil || ownerID != userID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to logs"})
 		return
@@ -156,7 +160,7 @@ func ExportBoardCSV(c *gin.Context) {
 
 	// Security check
 	var title string
-	err := database.DB.QueryRow("SELECT title FROM boards WHERE id = ? AND owner_id = ?", boardID, userID).Scan(&title)
+	err := database.DB.QueryRow("SELECT title FROM boards WHERE id = ? AND user_id = ?", boardID, userID).Scan(&title)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
 		return
@@ -224,7 +228,7 @@ func ArchiveBoard(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	boardID := c.Param("id")
 
-	_, err := database.DB.Exec("UPDATE boards SET is_archived = NOT is_archived WHERE id = ? AND owner_id = ?", boardID, userID)
+	_, err := database.DB.Exec("UPDATE boards SET is_archived = NOT is_archived WHERE id = ? AND user_id = ?", boardID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update board status"})
 		return
@@ -232,4 +236,3 @@ func ArchiveBoard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Board status updated"})
 }
-

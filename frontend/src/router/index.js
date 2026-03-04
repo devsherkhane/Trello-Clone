@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import ProfileView from '../views/ProfileView.vue'
 
 const routes = [
     {
@@ -23,6 +24,12 @@ const routes = [
         path: '/signup',
         name: 'Signup',
         component: () => import('../views/SignUpView.vue')
+    },
+    {
+        path: '/profile',
+        name: 'profile',
+        component: ProfileView,
+        meta: { requiresAuth: true } // Assuming you protect authenticated routes
     }
 ];
 

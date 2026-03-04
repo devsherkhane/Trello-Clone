@@ -40,16 +40,19 @@ func main() {
 	r.Use(middleware.ErrorHandler())
 
 	// 3. CORS Middleware to allow requests from your frontend
+// 3. CORS Middleware to allow requests from your frontend
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH") // Added PATCH!
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept") // Added Accept
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
 		c.Next()
 	})
+	
 
 	// Public Routes
 	apiPublic := r.Group("/api")
