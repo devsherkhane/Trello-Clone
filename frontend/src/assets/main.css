@@ -1,11 +1,73 @@
 :root {
-  --trello-blue: #0079bf;
-  --trello-gray: #ebecf0;
-  --trello-list: #dfe1e6;
+  /* Brand Colors - Vibrant Aurora (Teal & Indigo) */
+  --brand-primary: #14b8a6;
+  /* Teal 500 */
+  --brand-primary-hover: #0d9488;
+  /* Teal 600 */
+  --brand-secondary: #6366f1;
+  /* Indigo 500 */
+  --brand-accent: #f43f5e;
+  /* Rose 500 */
+
+  /* Semantic Backgrounds - Fresh Sky Wash */
+  --bg-app: #f0f9ff;
+  /* Sky 50 */
+  --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ccfbf1 100%);
+  --surface-primary: #ffffff;
+  --surface-secondary: #ecfeff;
+  /* Cyan 50 */
+  --surface-glass: rgba(255, 255, 255, 0.6);
+
+  /* Text Colors - High Energy Slate */
+  --text-main: #0f172a;
+  /* Slate 900 */
+  --text-muted: #475569;
+  /* Slate 600 */
+  --text-extramuted: #94a3b8;
+  /* Slate 400 */
+  --text-on-brand: #ffffff;
+
+  /* Borders & Shadows - Vibrant Softness */
+  --border-subtle: rgba(20, 184, 166, 0.1);
+  --border-radius: 16px;
+  --border-radius-sm: 10px;
+  --shadow-soft: 0 4px 20px -2px rgba(20, 184, 166, 0.1);
+  --shadow-strong: 0 10px 25px -5px rgba(20, 184, 166, 0.15);
+
+  /* Trello specific */
+  --trello-list: rgba(241, 245, 249, 0.8);
   --trello-card: #ffffff;
-  --trello-text: #172b4d;
-  --trello-shadow: 0 1px 0 rgba(9, 30, 66, 0.25);
-  --border-radius: 3px;
+  --card-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="dark"] {
+  /* Semantic Backgrounds - Midnight Aurora */
+  --bg-app: #020617;
+  /* Slate 950 */
+  --bg-gradient: radial-gradient(circle at top left, #0f172a, #020617 70%);
+  --surface-primary: #0f172a;
+  /* Slate 900 */
+  --surface-secondary: #1e293b;
+  /* Slate 800 */
+  --surface-glass: rgba(15, 23, 42, 0.7);
+
+  /* Text Colors */
+  --text-main: #f8fafc;
+  /* Slate 50 */
+  --text-muted: #94a3b8;
+  /* Slate 400 */
+  --text-extramuted: #64748b;
+  /* Slate 500 */
+
+  /* Borders & Shadows */
+  --border-subtle: rgba(45, 212, 191, 0.1);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.6);
+  --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.8);
+
+  /* Trello specific */
+  --trello-list: rgba(15, 23, 42, 0.6);
+  --trello-card: #1e293b;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -15,7 +77,71 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: var(--trello-text);
-  background-color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  background: var(--bg-app);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Utility Classes */
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-primary:hover {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Glassmorphism containers */
+.glass-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-strong);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

@@ -5,20 +5,35 @@ export const useWebsocket = () => {
 
   const connect = (boardId) => {
     const token = localStorage.getItem('token');
-    // Using the WebSocket endpoint we built in Go
-    socket = new WebSocket(`ws://localhost:8080/ws?boardID=${boardId}&token=${token}`);
+    socket = new WebSocket(`ws://localhost:8080/api/ws?boardID=${boardId}&token=${token}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       const boardStore = useBoardStore();
 
-      // Handle different real-time events
+      // IMPORTANT: Your Go backend needs to attach a "sender_id" to the websocket payload.
+      // If the event was caused by the current user, we IGNORE the websocket event 
+      // because vuedraggable already updated their screen instantly!
+      const currentUserId = JSON.parse(localStorage.getItem('user'))?.id; // Assuming you store user info
+      if (data.sender_id === currentUserId) return;
+
       switch (data.type) {
         case 'card_moved':
+          // Assuming your Go backend sends the old list, new list, and new position
+          if (data.card_id && data.from_list_id && data.to_list_id) {
+            boardStore.moveCardLocally(data.card_id, data.from_list_id, data.to_list_id, data.position, data.card);
+          } else {
+            // Fallback if payload is incomplete
+            boardStore.fetchBoardDetails(boardId);
+          }
+          break;
+
         case 'card_added':
         case 'comment_added':
-          boardStore.fetchBoardDetails(boardId); // Refresh data
+          // For now, fallback to refetch, but you can add surgical methods for these too!
+          boardStore.fetchBoardDetails(boardId);
           break;
+
         case 'user_online':
           console.log(`User ${data.user_id} joined the board`);
           break;

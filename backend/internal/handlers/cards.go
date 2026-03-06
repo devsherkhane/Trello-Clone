@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/devsherkhane/trello-clone/internal/utils"
 	"github.com/gin-gonic/gin"
 )
+
 // CreateCard godoc
 // @Summary Create a new card
 // @Tags Cards
@@ -37,7 +39,7 @@ func CreateCard(c *gin.Context) {
 	// Security Check: Verify the user owns the board this list belongs to
 	var ownerID int
 	err := database.DB.QueryRow(`
-        SELECT b.owner_id 
+        SELECT b.user_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         WHERE l.id = ?`, input.ListID).Scan(&ownerID)
@@ -89,7 +91,7 @@ func GetCardsByList(c *gin.Context) {
 	c.JSON(http.StatusOK, cards)
 }
 
-// UpdateCard modifies a card's title or description
+// UpdateCard modifies a card's title, description, due_date, or label_color
 func UpdateCard(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	cardID := c.Param("id")
@@ -97,6 +99,8 @@ func UpdateCard(c *gin.Context) {
 	var input struct {
 		Title       string `json:"title"`
 		Description string `json:"description"`
+		DueDate     string `json:"due_date"`
+		LabelColor  string `json:"label_color"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -107,7 +111,7 @@ func UpdateCard(c *gin.Context) {
 	// Security Check: Ensure the card belongs to a board owned by this user
 	var ownerID int
 	err := database.DB.QueryRow(`
-        SELECT b.owner_id 
+        SELECT b.user_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         JOIN cards c ON l.id = c.list_id 
@@ -118,8 +122,16 @@ func UpdateCard(c *gin.Context) {
 		return
 	}
 
-	query := "UPDATE cards SET title = ?, description = ? WHERE id = ?"
-	_, err = database.DB.Exec(query, input.Title, input.Description, cardID)
+	// Dynamic update query construction
+	query := "UPDATE cards SET title = ?, description = ?, due_date = ?, label_color = ? WHERE id = ?"
+
+	// Handle empty strings for due_date (if frontend sends empty string instead of null)
+	var dueDate interface{} = input.DueDate
+	if input.DueDate == "" {
+		dueDate = nil
+	}
+
+	_, err = database.DB.Exec(query, input.Title, input.Description, dueDate, input.LabelColor, cardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update card"})
 		return
@@ -136,7 +148,7 @@ func DeleteCard(c *gin.Context) {
 	// Security Check
 	var ownerID int
 	err := database.DB.QueryRow(`
-        SELECT b.owner_id 
+        SELECT b.user_id 
         FROM boards b 
         JOIN lists l ON b.id = l.board_id 
         JOIN cards c ON l.id = c.list_id 
@@ -176,7 +188,7 @@ func MoveCard(c *gin.Context) {
 	var boardID int
 	var ownerID int
 	err := database.DB.QueryRow(`
-        SELECT l.board_id, b.owner_id 
+        SELECT l.board_id, b.user_id 
         FROM lists l 
         JOIN boards b ON l.board_id = b.id 
         WHERE l.id = ?`, input.NewListID).Scan(&boardID, &ownerID)
@@ -228,7 +240,7 @@ func SearchCards(c *gin.Context) {
 		FROM cards c
 		JOIN lists l ON c.list_id = l.id
 		JOIN boards b ON l.board_id = b.id
-		WHERE b.owner_id = ? AND (c.title LIKE ? OR c.description LIKE ?)
+		WHERE b.user_id = ? AND (c.title LIKE ? OR c.description LIKE ?)
 		LIMIT ? OFFSET ?`
 
 	searchTerm := "%" + queryParam + "%"
@@ -253,7 +265,7 @@ func SearchCards(c *gin.Context) {
 		SELECT COUNT(*) FROM cards c
 		JOIN lists l ON c.list_id = l.id
 		JOIN boards b ON l.board_id = b.id
-		WHERE b.owner_id = ? AND (c.title LIKE ? OR c.description LIKE ?)`
+		WHERE b.user_id = ? AND (c.title LIKE ? OR c.description LIKE ?)`
 	database.DB.QueryRow(countQuery, userID, searchTerm, searchTerm).Scan(&total)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -273,14 +285,13 @@ func AdvancedSearch(c *gin.Context) {
 	}
 
 	// 2. Define the Base Query
-	// We use DISTINCT to avoid duplicate cards when multiple labels match
 	query := `
-		SELECT DISTINCT c.id, c.list_id, c.title, c.description, c.position, c.due_date
+		SELECT DISTINCT c.id, c.list_id, c.title, c.description, c.position, COALESCE(c.due_date, '')
 		FROM cards c
 		JOIN lists l ON c.list_id = l.id
 		JOIN boards b ON l.board_id = b.id
 		LEFT JOIN card_labels cl ON c.id = cl.card_id
-		WHERE (b.owner_id = ? OR EXISTS(
+		WHERE (b.user_id = ? OR EXISTS(
 			SELECT 1 FROM board_collaborators 
 			WHERE board_id = b.id AND user_id = ?
 		))`
@@ -288,7 +299,13 @@ func AdvancedSearch(c *gin.Context) {
 	var args []interface{}
 	args = append(args, userID.(int), userID.(int))
 
-	// 3. Apply Dynamic Filters based on Query Parameters
+	// 3. Apply Dynamic Filters
+
+	// Filter by specific Board (Crucial for "this board" search)
+	if boardID := c.Query("board_id"); boardID != "" {
+		query += " AND b.id = ?"
+		args = append(args, boardID)
+	}
 
 	// Filter by Label
 	if labelID := c.Query("label_id"); labelID != "" {
@@ -320,7 +337,6 @@ func AdvancedSearch(c *gin.Context) {
 	var cards []models.Card
 	for rows.Next() {
 		var card models.Card
-		// Note: Ensure your models.Card struct has a DueDate field (likely *time.Time or string)
 		err := rows.Scan(
 			&card.ID,
 			&card.ListID,
@@ -330,14 +346,14 @@ func AdvancedSearch(c *gin.Context) {
 			&card.DueDate,
 		)
 		if err != nil {
+			log.Printf("Error scanning card: %v", err)
 			continue
 		}
 		cards = append(cards, card)
 	}
 
-	// 6. Return the results
 	if cards == nil {
-		cards = []models.Card{} // Return empty array instead of null
+		cards = []models.Card{}
 	}
 	c.JSON(http.StatusOK, cards)
 }
@@ -365,7 +381,7 @@ func BatchUpdateCards(c *gin.Context) {
     FROM cards c
     JOIN lists l ON c.list_id = l.id
     JOIN boards b ON l.board_id = b.id
-    WHERE c.id IN (?) AND (b.owner_id = ? OR EXISTS(
+    WHERE c.id IN (?) AND (b.user_id = ? OR EXISTS(
         SELECT 1 FROM board_collaborators WHERE board_id = b.id AND user_id = ?
     ))`
 

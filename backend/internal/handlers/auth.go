@@ -3,8 +3,8 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
-	"log" // Ensure log is imported
+	"fmt" // Ensure log is imported
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,9 +14,9 @@ import (
 	"github.com/devsherkhane/trello-clone/internal/database"
 	"github.com/devsherkhane/trello-clone/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
 )
+
 // LoginUser godoc
 // @Summary Authenticate a user
 // @Tags Auth
@@ -91,10 +91,9 @@ func Login(c *gin.Context) {
 
 	var id int
 	var hashedPwd string
-	// Ensure the column names (id, password_hash) match your MySQL table exactly
+
 	err := database.DB.QueryRow("SELECT user_id, password_hash FROM users WHERE email = ?", req.Email).Scan(&id, &hashedPwd)
 	if err != nil {
-		log.Printf("Login Error: %v", err) // CHECK YOUR TERMINAL FOR THIS LOG
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -117,16 +116,30 @@ func Login(c *gin.Context) {
 func UpdateProfile(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 	var input struct {
-		Username string `json:"username"`
-		Password string `json:"password" binding:"omitempty,min=6"`
+		Username        string `json:"username"`
+		CurrentPassword string `json:"current_password" binding:"required"`
+		NewPassword     string `json:"new_password" binding:"omitempty,min=6"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Current password is required to save changes"})
 		return
 	}
 
-	// Update Username if provided
+	// 1. Verify Current Password
+	var hashedPwd string
+	err := database.DB.QueryRow("SELECT password_hash FROM users WHERE user_id = ?", userID).Scan(&hashedPwd)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify identity"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPwd), []byte(input.CurrentPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect current password"})
+		return
+	}
+
+	// 2. Update Username if provided
 	if input.Username != "" {
 		_, err := database.DB.Exec("UPDATE users SET username = ? WHERE user_id = ?", input.Username, userID)
 		if err != nil {
@@ -135,9 +148,9 @@ func UpdateProfile(c *gin.Context) {
 		}
 	}
 
-	// Update Password if provided (hashed)
-	if input.Password != "" {
-		hashed, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	// 3. Update Password if provided
+	if input.NewPassword != "" {
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
 		_, err := database.DB.Exec("UPDATE users SET password_hash = ? WHERE user_id = ?", string(hashed), userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
@@ -145,49 +158,55 @@ func UpdateProfile(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Profile updated successfully",
+		"username": input.Username,
+	})
+}
+
+func GetProfile(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+
+	var user struct {
+		ID        int    `json:"user_id"`
+		Username  string `json:"username"`
+		Email     string `json:"email"`
+		AvatarURL string `json:"avatar_url"`
+		Theme     string `json:"theme"`
+	}
+
+	err := database.DB.QueryRow("SELECT user_id, username, email, avatar_url, theme FROM users WHERE user_id = ?", userID).
+		Scan(&user.ID, &user.Username, &user.Email, &user.AvatarURL, &user.Theme)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func UpdateTheme(c *gin.Context) {
+	log.Println("DEBUG: UpdateTheme called")
 	userID := c.MustGet("userID").(int)
 	var input struct {
 		Theme string `json:"theme" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Printf("DEBUG: UpdateTheme bind error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Theme is required"})
 		return
 	}
 
-	_, err := database.DB.Exec("UPDATE users SET theme_preference = ? WHERE user_id = ?", input.Theme, userID)
+	log.Printf("DEBUG: Saving theme '%s' for user %d", input.Theme, userID)
+	_, err := database.DB.Exec("UPDATE users SET theme = ? WHERE user_id = ?", input.Theme, userID)
 	if err != nil {
+		log.Printf("DEBUG: UpdateTheme DB error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save preference"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Theme updated"})
-}
-
-func Setup2FA(c *gin.Context) {
-	userID := c.MustGet("userID").(int)
-	var email string
-	database.DB.QueryRow("SELECT email FROM users WHERE user_id = ?", userID).Scan(&email)
-
-	key, _ := totp.Generate(totp.GenerateOpts{
-		Issuer:      "TrelloClone",
-		AccountName: email,
-	})
-
-	// Store secret temporarily/permanently depending on your flow
-	_, err := database.DB.Exec("UPDATE users SET tfa_secret = ? WHERE user_id = ?", key.Secret(), userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to setup 2FA"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"secret": key.Secret(),
-		"url":    key.URL(), // Used to generate a QR code on the frontend
-	})
 }
 
 func UploadAvatar(c *gin.Context) {

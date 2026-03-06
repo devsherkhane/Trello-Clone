@@ -19,7 +19,7 @@ func UploadAttachment(c *gin.Context) {
 	// 1. Security Check: Verify user owns the board the card belongs to
 	var ownerID int
 	err := database.DB.QueryRow(`
-		SELECT b.owner_id FROM boards b
+		SELECT b.user_id FROM boards b
 		JOIN lists l ON b.id = l.board_id
 		JOIN cards c ON l.id = c.list_id
 		WHERE c.id = ?`, cardID).Scan(&ownerID)
@@ -66,7 +66,7 @@ func GetAttachmentsByCard(c *gin.Context) {
 	// Security Check: Verify user owns the board this card belongs to
 	var ownerID int
 	err := database.DB.QueryRow(`
-        SELECT b.owner_id FROM boards b
+        SELECT b.user_id FROM boards b
         JOIN lists l ON b.id = l.board_id
         JOIN cards c ON l.id = c.list_id
         WHERE c.id = ?`, cardID).Scan(&ownerID)

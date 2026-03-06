@@ -32,6 +32,11 @@
           <h3>Update Profile</h3>
           <form @submit.prevent="updateProfile" class="profile-form">
             <div class="form-group">
+              <label>Email</label>
+              <input type="email" :value="auth.user?.email" disabled class="disabled-input" />
+              <small class="hint">Email cannot be changed</small>
+            </div>
+            <div class="form-group">
               <label>Username</label>
               <input type="text" v-model="profileForm.username" placeholder="New username" required />
             </div>
@@ -47,20 +52,29 @@
           </form>
         </section>
 
+        <!-- Theme Toggling Section -->
         <section class="settings-section">
-          <h3>Two-Factor Authentication (2FA)</h3>
-          <p class="subtitle">Secure your account by requiring a code from an authenticator app when you log in.</p>
+          <h3>Display Theme</h3>
+          <p class="subtitle">Customize the look and feel of your Trello Clone workspace.</p>
           
-          <div v-if="!qrCodeUrl" class="two-fa-action">
-            <button class="btn-primary" @click="setup2FA">Setup 2FA</button>
-          </div>
-          
-          <div v-else class="qr-code-container">
-            <p class="success-text">Scan this QR code with Google Authenticator or Authy:</p>
-            <img :src="qrCodeUrl" alt="2FA QR Code" class="qr-image"/>
-            <p class="warning-text">Make sure to save this setup in your app before leaving this page!</p>
+          <div class="theme-options">
+            <button 
+              class="theme-btn" 
+              :class="{ active: currentTheme === 'light' }" 
+              @click="setTheme('light')"
+            >
+              ☀️ Light Mode
+            </button>
+            <button 
+              class="theme-btn" 
+              :class="{ active: currentTheme === 'dark' }" 
+              @click="setTheme('dark')"
+            >
+              🌙 Dark Mode
+            </button>
           </div>
         </section>
+
 
       </div>
     </div>
@@ -68,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useToast } from 'vue-toastification';
@@ -79,10 +93,14 @@ const auth = useAuthStore();
 const toast = useToast();
 
 // State
-const avatarUrl = ref('');
 const selectedFile = ref(null);
 const fileInput = ref(null);
-const qrCodeUrl = ref('');
+
+const avatarUrl = computed(() => {
+  if (!auth.user?.avatar_url) return '';
+  if (auth.user.avatar_url.startsWith('http')) return auth.user.avatar_url;
+  return `http://localhost:8080/${auth.user.avatar_url.replace(/\\/g, '/')}`;
+});
 
 const profileForm = ref({
   username: '',
@@ -90,17 +108,26 @@ const profileForm = ref({
   new_password: ''
 });
 
+const currentTheme = ref('light');
+
 // Initialization
-onMounted(() => {
+onMounted(async () => {
+  if (!auth.user) {
+    await auth.fetchUser();
+  }
+  
   if (auth.user) {
     profileForm.value.username = auth.user.username || '';
-    // If your backend returns the avatar URL in the user object, set it here
-    avatarUrl.value = auth.user.avatar_url || '';
+    
+    // Load existing theme
+    const savedTheme = localStorage.getItem('theme') || auth.user.theme || 'light';
+    currentTheme.value = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }
 });
 
 const goBack = () => {
-  router.push('/dashboard');
+  router.push('/');
 };
 
 // Avatar Handling
@@ -115,7 +142,7 @@ const uploadAvatar = async () => {
   if (!selectedFile.value) return;
   
   const formData = new FormData();
-  formData.append('file', selectedFile.value); // Backend usually expects 'file' or 'avatar'
+  formData.append('avatar', selectedFile.value); // Backend expects 'avatar'
 
   try {
     const response = await api.post('/user/avatar', formData, {
@@ -124,10 +151,8 @@ const uploadAvatar = async () => {
     toast.success("Profile picture updated!");
     selectedFile.value = null;
     
-    // Update local state if backend returns the new URL
-    if (response.data && response.data.avatar_url) {
-      avatarUrl.value = response.data.avatar_url;
-    }
+    // Update local state by re-fetching user data
+    await auth.fetchUser();
   } catch (error) {
     toast.error(error.response?.data?.error || "Failed to upload avatar");
   }
@@ -148,43 +173,56 @@ const updateProfile = async () => {
     profileForm.value.current_password = '';
     profileForm.value.new_password = '';
     
-    // Update the username in Pinia store
-    if (auth.user) {
-      auth.user.username = profileForm.value.username;
-    }
+    // Refresh user data in store
+    await auth.fetchUser();
   } catch (error) {
     toast.error(error.response?.data?.error || "Failed to update profile");
   }
 };
 
-// 2FA Handling
-const setup2FA = async () => {
+// Theme Toggle Logic
+const setTheme = async (theme) => {
+  currentTheme.value = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+
   try {
-    const response = await api.post('/2fa/setup');
-    // Adjust '.qr_url' based on the exact JSON key your backend returns
-    qrCodeUrl.value = response.data.qr_url || response.data.url || response.data; 
-    toast.success("2FA generated successfully");
-  } catch (error) {
-    toast.error("Failed to generate 2FA setup");
+    await api.put('/user/theme', { theme });
+    toast.success(`Theme updated to ${theme} mode`);
+  } catch (err) {
+    toast.error("Failed to save theme preference");
   }
 };
 </script>
 
 <style scoped>
 .profile-canvas {
-  height: 100vh;
-  background-color: var(--trello-blue, #0079bf);
+  min-height: 100vh;
+  background: var(--bg-gradient);
   display: flex;
   flex-direction: column;
 }
 
 .board-header {
-  padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.15);
-  color: white;
+  padding: 16px 32px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-left h2 {
+  color: var(--text-main);
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .profile-content {
@@ -197,55 +235,72 @@ const setup2FA = async () => {
 }
 
 .settings-card {
-  background: #f4f5f7;
-  border-radius: 3px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
   width: 100%;
-  max-width: 600px;
-  padding: 30px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  max-width: 640px;
+  padding: 40px;
+  box-shadow: var(--shadow-strong);
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .settings-section {
-  background: white;
-  border-radius: 3px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #dfe1e6;
+  background: var(--surface-secondary);
+  border-radius: var(--border-radius-sm);
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.settings-section:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-strong);
+  border-color: var(--brand-primary);
 }
 
 .settings-section h3 {
   margin-top: 0;
-  margin-bottom: 15px;
-  color: #172b4d;
-  border-bottom: 1px solid #dfe1e6;
-  padding-bottom: 10px;
+  margin-bottom: 20px;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .subtitle {
-  color: #5e6c84;
+  color: var(--text-muted);
   font-size: 14px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  line-height: 1.5;
 }
 
 /* Avatar Upload Styles */
 .avatar-upload-area {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .avatar-preview {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  background: #dfe1e6;
+  background: var(--brand-primary);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 32px;
-  font-weight: bold;
-  color: #172b4d;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-on-brand);
   overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
 }
 
 .avatar-preview img {
@@ -256,109 +311,169 @@ const setup2FA = async () => {
 
 .upload-controls {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .file-name {
-  font-size: 12px;
-  color: #5e6c84;
+  font-size: 13px;
+  color: var(--text-muted);
   margin: 0;
+  background: var(--surface-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid var(--border-subtle);
 }
 
 /* Form Styles */
 .profile-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .form-group label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #172b4d;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-group input {
-  padding: 8px 12px;
-  border: 2px solid #dfe1e6;
-  border-radius: 3px;
-  font-size: 14px;
-  background: #fafbfc;
+  padding: 12px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-sm);
+  font-size: 15px;
+  background: var(--surface-primary);
+  color: var(--text-main);
+  transition: all 0.2s;
 }
 
 .form-group input:focus {
-  border-color: #4c9aff;
+  border-color: var(--brand-primary);
   outline: none;
-  background: white;
+  background: var(--surface-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-/* 2FA Styles */
-.qr-code-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #fafbfc;
-  padding: 20px;
-  border-radius: 3px;
-  border: 1px solid #dfe1e6;
+.form-group input:disabled {
+  background: var(--surface-secondary);
+  color: var(--text-extramuted);
+  cursor: not-allowed;
+  border-color: var(--border-subtle);
 }
 
-.qr-image {
-  max-width: 200px;
-  margin: 15px 0;
-  border: 10px solid white;
-  border-radius: 5px;
+.hint {
+  font-size: 11px;
+  color: var(--text-extramuted);
+  margin-top: -12px;
 }
 
-.success-text {
-  color: #006644;
-  font-weight: bold;
-  margin: 0;
+.form-group input::placeholder {
+  color: var(--text-extramuted);
 }
 
-.warning-text {
-  color: #ff991f;
-  font-size: 12px;
-  margin: 0;
-}
 
 /* Buttons */
 .btn-primary {
-  background: #0079bf;
-  color: white;
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
   border: none;
-  padding: 8px 16px;
-  border-radius: 3px;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  transition: all 0.2s;
+  align-self: flex-start;
 }
-.btn-primary:hover { background: #026aa7; }
+
+.btn-primary:hover:not(:disabled) { 
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
 .btn-primary:disabled {
-  background: #ebecf0;
-  color: #a5adba;
+  background: var(--text-extramuted);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 3px;
+  background: var(--surface-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
 }
-.btn-secondary:hover { background: rgba(255, 255, 255, 0.3); }
+
+.btn-secondary:hover { 
+  background: var(--surface-primary);
+  transform: translateY(-1px);
+  color: var(--text-main);
+  border-color: var(--brand-primary);
+}
 
 .settings-section .btn-secondary {
-  background: #ebecf0;
-  color: #172b4d;
+  background: var(--surface-primary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
 }
-.settings-section .btn-secondary:hover { background: #dfe1e6; }
+
+.settings-section .btn-secondary:hover { 
+  background: var(--surface-secondary);
+  color: var(--text-main);
+}
+
+/* Theme Option Styles */
+.theme-options {
+  display: flex;
+  gap: 16px;
+}
+
+.theme-btn {
+  flex: 1;
+  padding: 16px;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--border-radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.theme-btn:hover {
+  background: var(--surface-secondary);
+  border-color: var(--brand-primary);
+  color: var(--text-main);
+}
+
+.theme-btn.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
 </style>

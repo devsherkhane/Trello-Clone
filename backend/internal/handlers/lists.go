@@ -22,7 +22,7 @@ func CreateList(c *gin.Context) {
 
     // Verify ownership
     var ownerID int
-    err := database.DB.QueryRow("SELECT owner_id FROM boards WHERE id = ?", input.BoardID).Scan(&ownerID)
+    err := database.DB.QueryRow("SELECT user_id FROM boards WHERE id = ?", input.BoardID).Scan(&ownerID)
     if err != nil || ownerID != userID {
         c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access to this board"})
         return
@@ -87,7 +87,7 @@ func UpdateList(c *gin.Context) {
         UPDATE lists l 
         JOIN boards b ON l.board_id = b.id 
         SET l.title = ? 
-        WHERE l.id = ? AND b.owner_id = ?`
+        WHERE l.id = ? AND b.user_id = ?`
     
     _, err := database.DB.Exec(query, input.Title, listID, userID)
     if err != nil {
@@ -106,7 +106,7 @@ func DeleteList(c *gin.Context) {
     query := `
         DELETE l FROM lists l 
         JOIN boards b ON l.board_id = b.id 
-        WHERE l.id = ? AND b.owner_id = ?`
+        WHERE l.id = ? AND b.user_id = ?`
     
     _, err := database.DB.Exec(query, listID, userID)
     if err != nil {

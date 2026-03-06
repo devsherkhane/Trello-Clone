@@ -39,9 +39,9 @@ func CreateComment(c *gin.Context) {
 	// Use your existing collaborator check logic
 	var ownerID int
 	checkQuery := `
-		SELECT b.owner_id FROM boards b
+		SELECT b.user_id FROM boards b
 		LEFT JOIN board_collaborators bc ON b.id = bc.board_id
-		WHERE b.id = ? AND (b.owner_id = ? OR bc.user_id = ?)`
+		WHERE b.id = ? AND (b.user_id = ? OR bc.user_id = ?)`
 
 	err = database.DB.QueryRow(checkQuery, boardID, userID, userID).Scan(&ownerID)
 	if err != nil {

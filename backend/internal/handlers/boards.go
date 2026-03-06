@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/devsherkhane/trello-clone/internal/database"
@@ -29,28 +30,106 @@ func CreateBoard(c *gin.Context) {
 		return
 	}
 	id, _ := result.LastInsertId()
-	c.JSON(http.StatusCreated, gin.H{"id": id, "title": input.Title})
+	c.JSON(http.StatusCreated, gin.H{
+		"id":       id,
+		"title":    input.Title,
+		"user_id":  userID,
+		"is_owner": true,
+		"status":   "accepted",
+	})
 }
 
 func GetBoards(c *gin.Context) {
-	userID := c.MustGet("userID").(int)
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+	uid := userID.(int)
 	archived := c.Query("archived") == "true"
-	var boards []models.Board
-	query := "SELECT id, title, user_id FROM boards WHERE user_id = ? AND is_archived = ?"
-	rows, err := database.DB.Query(query, userID, archived)
+	isArchivedInt := 0
+	if archived {
+		isArchivedInt = 1
+	}
+
+	log.Printf("DEBUG: GetBoards for UID=%d, Archived=%d", uid, isArchivedInt)
+
+	query := `
+		SELECT b.id, b.title, b.user_id, (b.user_id = ?) as is_owner, COALESCE(bc.status, 'accepted') as status
+		FROM boards b
+		LEFT JOIN board_collaborators bc ON b.id = bc.board_id AND bc.user_id = ?
+		WHERE (b.user_id = ? OR (bc.user_id = ? AND bc.status IS NOT NULL)) AND b.is_archived = ?
+	`
+
+	var count int
+	database.DB.QueryRow("SELECT COUNT(*) FROM boards").Scan(&count)
+	log.Printf("DEBUG: Total boards in DB: %d", count)
+
+	rows, err := database.DB.Query(query, uid, uid, uid, uid, isArchivedInt)
 	if err != nil {
-		// ADD THIS LINE
-		fmt.Println("GET BOARDS DB ERROR:", err)
+		log.Printf("GET BOARDS DB ERROR: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 	defer rows.Close()
+
+	var boards []gin.H
 	for rows.Next() {
-		var b models.Board
-		rows.Scan(&b.ID, &b.Title, &b.UserID)
-		boards = append(boards, b)
+		var id, ownerID, isOwner int
+		var title, status string
+		if err := rows.Scan(&id, &title, &ownerID, &isOwner, &status); err != nil {
+			log.Printf("SCAN ERROR: %v", err)
+			continue
+		}
+		boards = append(boards, gin.H{
+			"id":       id,
+			"title":    title,
+			"user_id":  ownerID,
+			"is_owner": isOwner == 1,
+			"status":   status,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("ROWS ERROR: %v", err)
+	}
+
+	log.Printf("DEBUG: GetBoards returning %d boards for user %d", len(boards), uid)
+	if boards == nil {
+		boards = []gin.H{}
 	}
 	c.JSON(http.StatusOK, boards)
+}
+
+func RespondToInvitation(c *gin.Context) {
+	userID := c.MustGet("userID").(int)
+	boardID := c.Param("id")
+	var input struct {
+		Action string `json:"action" binding:"required"` // "accept" or "decline"
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Action (accept/decline) is required"})
+		return
+	}
+
+	if input.Action == "accept" {
+		_, err := database.DB.Exec("UPDATE board_collaborators SET status = 'accepted' WHERE board_id = ? AND user_id = ?", boardID, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to accept invitation"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Invitation accepted"})
+	} else if input.Action == "decline" {
+		_, err := database.DB.Exec("DELETE FROM board_collaborators WHERE board_id = ? AND user_id = ?", boardID, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decline invitation"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Invitation declined"})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action"})
+	}
 }
 
 // UpdateBoard changes the title of an existing board
@@ -121,7 +200,54 @@ func GetBoard(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
-	c.JSON(http.StatusOK, b)
+
+	// Fetch Lists
+	type CardDetail struct {
+		models.Card
+		Labels []gin.H `json:"labels,omitempty"`
+	}
+
+	type ListWithCards struct {
+		models.List
+		Cards []CardDetail `json:"cards"`
+	}
+
+	var lists []ListWithCards
+	listRows, err := database.DB.Query("SELECT id, board_id, title, position FROM lists WHERE board_id = ? ORDER BY position ASC", b.ID)
+	if err == nil {
+		defer listRows.Close()
+		for listRows.Next() {
+			var l ListWithCards
+			listRows.Scan(&l.ID, &l.BoardID, &l.Title, &l.Position)
+
+			// Fetch Cards for this List
+			cardRows, err := database.DB.Query("SELECT id, list_id, title, description, position, due_date FROM cards WHERE list_id = ? ORDER BY position ASC", l.ID)
+			if err == nil {
+				l.Cards = make([]CardDetail, 0)
+				for cardRows.Next() {
+					var cd CardDetail
+					cardRows.Scan(&cd.ID, &cd.ListID, &cd.Title, &cd.Description, &cd.Position, &cd.DueDate)
+					l.Cards = append(l.Cards, cd)
+				}
+				cardRows.Close()
+			}
+			lists = append(lists, l)
+		}
+	}
+
+	// Create a custom response extending models.Board
+	response := gin.H{
+		"id":      b.ID,
+		"title":   b.Title,
+		"user_id": b.UserID,
+		"lists":   lists,
+	}
+
+	if lists == nil {
+		response["lists"] = []ListWithCards{}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetActivityLogs retrieves the history for a specific board
@@ -208,7 +334,15 @@ func AddCollaborator(c *gin.Context) {
 		return
 	}
 
-	// 2. Insert into board_collaborators
+	// 2. Prevent owner from inviting themselves
+	var ownerID int
+	database.DB.QueryRow("SELECT user_id FROM boards WHERE id = ?", boardID).Scan(&ownerID)
+	if collaboratorID == ownerID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You cannot invite yourself to your own board"})
+		return
+	}
+
+	// 3. Insert into board_collaborators
 	_, err = database.DB.Exec("INSERT INTO board_collaborators (board_id, user_id, role) VALUES (?, ?, ?)", boardID, collaboratorID, input.Role)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "User is already a collaborator"})

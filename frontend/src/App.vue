@@ -1,3 +1,16 @@
+<script setup>
+import { onMounted } from 'vue';
+import { useAuthStore } from './stores/auth';
+
+const auth = useAuthStore();
+
+onMounted(() => {
+  if (auth.token) {
+    auth.fetchUser();
+  }
+});
+</script>
+
 <template>
   <div id="app-container">
     <router-view />

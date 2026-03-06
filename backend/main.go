@@ -40,11 +40,11 @@ func main() {
 	r.Use(middleware.ErrorHandler())
 
 	// 3. CORS Middleware to allow requests from your frontend
-// 3. CORS Middleware to allow requests from your frontend
+	// 3. CORS Middleware to allow requests from your frontend
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH") // Added PATCH!
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept") // Added Accept
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept")    // Added Accept
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -52,7 +52,6 @@ func main() {
 		}
 		c.Next()
 	})
-	
 
 	// Public Routes
 	apiPublic := r.Group("/api")
@@ -99,23 +98,24 @@ func main() {
 		api.GET("/ws", notifications.GlobalHub.HandleWS)
 		api.GET("/boards/:id/export", handlers.ExportBoardCSV)
 		api.PUT("/user/theme", handlers.UpdateTheme)
+		api.GET("/user/me", handlers.GetProfile)
 
 		api.POST("/boards/:id/collaborators", handlers.AddCollaborator)
+		api.PATCH("/boards/:id/invitation", handlers.RespondToInvitation)
 		api.PATCH("/boards/:id/archive", handlers.ArchiveBoard)
 		api.POST("/comments", handlers.CreateComment)
 		api.GET("/cards/:id/comments", handlers.GetCommentsByCard)
 
-		api.POST("/2fa/setup", handlers.Setup2FA)
 		api.POST("/cards/labels", handlers.AddLabelToCard)
 
 		api.GET("/search/advanced", handlers.AdvancedSearch)
 		api.POST("/addlabel", handlers.AddLabelToCard)
 
 		api.POST("/user/avatar", handlers.UploadAvatar)
-
-		r.POST("/api/forgot-password", handlers.ForgotPassword)
-		r.POST("/api/reset-password", handlers.ResetPassword)
 	}
+
+	r.POST("/api/forgot-password", handlers.ForgotPassword)
+	r.POST("/api/reset-password", handlers.ResetPassword)
 
 	// 4. Run the server on port 8080
 	log.Println("Server starting on :8080...")

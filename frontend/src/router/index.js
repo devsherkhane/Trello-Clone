@@ -30,7 +30,17 @@ const routes = [
         name: 'profile',
         component: ProfileView,
         meta: { requiresAuth: true } // Assuming you protect authenticated routes
-    }
+    },
+    {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('../views/ForgotPasswordView.vue')
+    },
+    {
+        path: '/reset-password',
+        name: 'ResetPassword',
+        component: () => import('../views/ResetPasswordView.vue')
+    },
 ];
 
 const router = createRouter({

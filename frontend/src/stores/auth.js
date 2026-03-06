@@ -18,24 +18,21 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await api.post('/login', { email, password });
 
-                // Save to state
+                // CHECK IF 2FA IS REQUIRED
+                if (response.data.requires_2fa) {
+                    return { success: false, requires_2fa: true, user_id: response.data.user_id };
+                }
+
+                // Normal Login
                 this.token = response.data.token;
-                this.user = response.data.user;
-
-                // Save to browser storage
                 localStorage.setItem('token', this.token);
-
+                await this.fetchUser();
                 return { success: true };
             } catch (error) {
-                return {
-                    success: false,
-                    message: error.response?.data?.error || 'Login failed'
-                };
+                return { success: false, message: error.response?.data?.error || 'Login failed' };
             } finally {
                 this.loading = false;
             }
-
-
         },
 
         logout() {
@@ -44,15 +41,14 @@ export const useAuthStore = defineStore('auth', {
             localStorage.removeItem('token');
             window.location.href = '/login'; // Hard redirect to clear state
         },
-    // Add this inside the actions: {} block in your auth.js store
-    async register(userData) {
+
+        async register(userData) {
             this.loading = true;
             try {
                 const response = await api.post('/register', userData);
-                // Usually, you log the user in immediately after registration
                 this.token = response.data.token;
-                this.user = response.data.user;
                 localStorage.setItem('token', this.token);
+                await this.fetchUser();
                 return { success: true };
             } catch (error) {
                 return {
@@ -61,6 +57,24 @@ export const useAuthStore = defineStore('auth', {
                 };
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async fetchUser() {
+            if (!this.token) return;
+            try {
+                const response = await api.get('/user/me');
+                this.user = response.data;
+                // Sync theme from profile
+                if (this.user.theme) {
+                    document.documentElement.setAttribute('data-theme', this.user.theme);
+                    localStorage.setItem('theme', this.user.theme);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user:", error);
+                if (error.response?.status === 401) {
+                    this.logout();
+                }
             }
         }
     }
