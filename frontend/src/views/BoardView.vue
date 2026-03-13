@@ -217,15 +217,20 @@ const submitList = async () => {
 
 // --- Card Actions ---
 const submitCard = async (listId, title) => {
+  console.log("Submitting card:", { listId, title });
   try {
     const response = await api.post('/cards', { list_id: listId, title });
+    console.log("Card created successfully:", response.data);
     const targetList = boardStore.lists.find(l => l.id === listId);
     if (targetList) {
       if (!targetList.cards) targetList.cards = [];
       targetList.cards.push(response.data);
     }
     currentlyEditingList.value = null;
-  } catch (err) { toast.error("Card creation failed"); }
+  } catch (err) { 
+    console.error("Card creation failed error:", err);
+    toast.error("Card creation failed"); 
+  }
 };
 
 const deleteCard = async () => {

@@ -366,7 +366,7 @@ const setTheme = async (theme) => {
   border-color: var(--brand-primary);
   outline: none;
   background: var(--surface-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .form-group input:disabled {
@@ -472,7 +472,7 @@ const setTheme = async (theme) => {
 }
 
 .theme-btn.active {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(124, 58, 237, 0.1);
   border-color: var(--brand-primary);
   color: var(--brand-primary);
 }

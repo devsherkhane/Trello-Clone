@@ -58,7 +58,7 @@ const handleForgot = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #0079bf;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9 50%, #4c1d95);
   padding: 20px;
 }
 
@@ -78,7 +78,7 @@ const handleForgot = async () => {
 }
 
 .auth-header h1 {
-  color: #115e59; /* Darker Teal */
+  color: #4c1d95; /* Violet 900 */
   font-size: 38px;
   font-weight: 900;
   letter-spacing: -1.5px;
@@ -112,9 +112,9 @@ input {
 }
 
 input:focus {
-  border-color: #14b8a6;
+  border-color: #7c3aed;
   outline: none;
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
   background: white;
 }
 
@@ -123,18 +123,18 @@ input:focus {
   margin-top: 30px;
   padding: 16px;
   font-size: 16px;
-  background: #14b8a6;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
   color: white;
   border: none;
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
   transition: all 0.2s;
 }
 
 .btn-primary:hover {
-  background: #0d9488;
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
   transform: translateY(-1px);
 }
 
@@ -169,14 +169,14 @@ input:focus {
 }
 
 .auth-footer a {
-  color: #14b8a6;
+  color: #7c3aed;
   font-weight: 700;
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .auth-footer a:hover {
-  color: #0d9488;
+  color: #6d28d9;
   text-decoration: underline;
 }
 </style>

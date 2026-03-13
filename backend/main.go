@@ -102,7 +102,7 @@ func main() {
 
 	// Protected Routes (Require JWT)
 	api := r.Group("/api")
-	api.Use(auth.AuthMiddleware())
+	api.Use(auth.AuthMiddleware(userRepo))
 	{
 		// Board Routes
 		api.POST("/boards", apiHandler.CreateBoard)

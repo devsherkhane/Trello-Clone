@@ -29,12 +29,7 @@ func (h *APIHandler) CreateCard(c *gin.Context) {
 }
 
 func (h *APIHandler) GetCards(c *gin.Context) {
-	listIDStr := c.Query("list_id")
-	if listIDStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "list_id is required"})
-		return
-	}
-	listID, _ := strconv.Atoi(listIDStr)
+	listID, _ := strconv.Atoi(c.Param("id"))
 
 	cards, err := h.CardService.GetCardsByList(listID)
 	if err != nil {

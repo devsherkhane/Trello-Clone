@@ -214,7 +214,7 @@ const onSubmitComment = () => {
 }
 .description-input:focus {
   background: #fff; border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); outline: none;
 }
 
 .attachment-item {
@@ -282,7 +282,7 @@ const onSubmitComment = () => {
   border-radius: var(--border-radius-sm); background: #f8fafc;
   font-family: inherit; color: var(--text-primary); box-sizing: border-box; transition: all 0.2s;
 }
-.date-picker:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); background: #fff; }
+.date-picker:focus { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); background: #fff; }
 
 .labels-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .label-swatch { width: 44px; height: 32px; border-radius: var(--border-radius-sm); cursor: pointer; transition: transform 0.2s; }

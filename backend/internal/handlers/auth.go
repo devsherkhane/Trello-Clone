@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"net/http"
+
 	"github.com/devsherkhane/trello-clone/internal/middleware"
+	"github.com/devsherkhane/trello-clone/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,8 +26,15 @@ func (h *APIHandler) Register(c *gin.Context) {
 		return
 	}
 
+	token, err := utils.GenerateJWT(user.ID, user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
+		"token":   token,
 		"user":    user,
 	})
 }
@@ -55,9 +64,15 @@ func (h *APIHandler) Login(c *gin.Context) {
 }
 
 func (h *APIHandler) GetProfile(c *gin.Context) {
-	// Not strictly hitting DB since we assume the token holds what we need for now,
-	// but can be extended if profile fetches dynamic DB fields
-	c.JSON(http.StatusOK, gin.H{"message": "Profile accessed"})
+	userID := c.MustGet("userID").(int)
+
+	user, err := h.AuthService.GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *APIHandler) UpdateProfile(c *gin.Context) {

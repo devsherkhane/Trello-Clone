@@ -15,6 +15,7 @@ type AuthService interface {
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
 	UpdateProfile(userID int, username, newEmail string) (*models.User, error)
+	GetUserByID(userID int) (*models.User, error)
 }
 
 type authService struct {
@@ -126,6 +127,15 @@ func (s *authService) UpdateProfile(userID int, username, newEmail string) (*mod
 	}
 
 	if err := s.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+	user.PasswordHash = ""
+	return user, nil
+}
+
+func (s *authService) GetUserByID(userID int) (*models.User, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
 		return nil, err
 	}
 	user.PasswordHash = ""

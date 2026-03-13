@@ -33,18 +33,13 @@ func (r *cardRepository) GetByListID(listID int) ([]models.Card, error) {
 	var cards []models.Card
 	for rows.Next() {
 		var c models.Card
-		// due_date can be null
-		var dueDate sql.NullString
-		var labelColor sql.NullString
-		if err := rows.Scan(&c.ID, &c.ListID, &c.Title, &c.Description, &c.Position, &dueDate, &labelColor); err != nil {
+		var desc, dueDate, labelColor sql.NullString
+		if err := rows.Scan(&c.ID, &c.ListID, &c.Title, &desc, &c.Position, &dueDate, &labelColor); err != nil {
 			return nil, err
 		}
-		if dueDate.Valid {
-			c.DueDate = dueDate.String
-		}
-		if labelColor.Valid {
-			c.LabelColor = labelColor.String
-		}
+		c.Description = desc.String
+		c.DueDate = dueDate.String
+		c.LabelColor = labelColor.String
 		cards = append(cards, c)
 	}
 	return cards, nil
@@ -68,7 +63,18 @@ func (r *cardRepository) Update(c *models.Card) error {
 		SET title = ?, description = ?, due_date = ?, label_color = ? 
 		WHERE id = ?
 	`
-	_, err := r.db.Exec(query, c.Title, c.Description, c.DueDate, c.LabelColor, c.ID)
+	// Convert empty strings to NULL for nullable columns
+	var dueDate interface{}
+	if c.DueDate != "" {
+		dueDate = c.DueDate
+	}
+
+	var labelColor interface{}
+	if c.LabelColor != "" {
+		labelColor = c.LabelColor
+	}
+
+	_, err := r.db.Exec(query, c.Title, c.Description, dueDate, labelColor, c.ID)
 	return err
 }
 
@@ -126,17 +132,14 @@ func (r *cardRepository) Delete(cardID int) error {
 func (r *cardRepository) GetByID(cardID int) (*models.Card, error) {
 	query := "SELECT id, list_id, title, description, position, due_date, label_color FROM cards WHERE id = ?"
 	var c models.Card
-	var dueDate, labelColor sql.NullString
+	var desc, dueDate, labelColor sql.NullString
 
-	err := r.db.QueryRow(query, cardID).Scan(&c.ID, &c.ListID, &c.Title, &c.Description, &c.Position, &dueDate, &labelColor)
+	err := r.db.QueryRow(query, cardID).Scan(&c.ID, &c.ListID, &c.Title, &desc, &c.Position, &dueDate, &labelColor)
 	if err != nil {
 		return nil, err
 	}
-	if dueDate.Valid {
-		c.DueDate = dueDate.String
-	}
-	if labelColor.Valid {
-		c.LabelColor = labelColor.String
-	}
+	c.Description = desc.String
+	c.DueDate = dueDate.String
+	c.LabelColor = labelColor.String
 	return &c, nil
 }

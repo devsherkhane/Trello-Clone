@@ -61,7 +61,7 @@ const formatTimeAgo = (dateString) => {
 
 .board-menu {
   position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
-  background: white; box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  background: var(--surface-primary); box-shadow: -4px 0 15px rgba(0,0,0,0.1);
   z-index: 90; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex; flex-direction: column;
 }
@@ -69,7 +69,7 @@ const formatTimeAgo = (dateString) => {
 
 .menu-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 20px; border-bottom: 1px solid #e2e8f0;
+  padding: 20px; border-bottom: 1px solid var(--border-subtle);
 }
 .menu-header h3 { margin: 0; color: var(--text-primary); }
 
@@ -79,7 +79,7 @@ const formatTimeAgo = (dateString) => {
 }
 .btn-close:hover { background: var(--surface-secondary); color: var(--text-main); }
 
-.menu-content { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; }
+.menu-content { flex: 1; overflow-y: auto; padding: 20px; background: var(--surface-secondary); }
 .menu-section { margin-bottom: 30px; }
 .menu-section h4 { margin: 0 0 15px 0; color: var(--text-secondary); text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
 
@@ -92,7 +92,7 @@ const formatTimeAgo = (dateString) => {
 .w-100 { width: 100%; }
 
 .activity-feed { display: flex; flex-direction: column; gap: 15px; }
-.activity-item { display: flex; gap: 12px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
+.activity-item { display: flex; gap: 12px; padding-bottom: 15px; border-bottom: 1px solid var(--border-subtle); }
 .activity-content p { margin: 0 0 4px 0; font-size: 14px; color: var(--text-primary); line-height: 1.4; }
 .activity-time { font-size: 12px; color: var(--text-secondary); }
 .empty-state { text-align: center; color: var(--text-secondary); font-size: 14px; padding: 20px 0; }

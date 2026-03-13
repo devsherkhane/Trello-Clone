@@ -37,12 +37,7 @@ func (h *APIHandler) CreateList(c *gin.Context) {
 }
 
 func (h *APIHandler) GetLists(c *gin.Context) {
-	boardIDStr := c.Query("board_id")
-	if boardIDStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "board_id is required"})
-		return
-	}
-	boardID, _ := strconv.Atoi(boardIDStr)
+	boardID, _ := strconv.Atoi(c.Param("id"))
 
 	// Verify Board Access
 	userID := c.MustGet("userID").(int)

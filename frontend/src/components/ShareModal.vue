@@ -55,7 +55,7 @@ const onInvite = () => {
 }
 
 .share-modal-content {
-  background: white; width: 400px; padding: 24px;
+  background: var(--surface-primary); width: 400px; padding: 24px;
   border-radius: var(--border-radius); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   animation: modalSlideIn 0.2s ease-out;
 }
@@ -82,7 +82,7 @@ const onInvite = () => {
   border-radius: var(--border-radius-sm); font-family: inherit; font-size: 14px;
   box-sizing: border-box; transition: all 0.2s;
 }
-.share-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+.share-input:focus { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
 
 .btn-primary {
   background: var(--brand-primary); color: var(--text-on-brand);

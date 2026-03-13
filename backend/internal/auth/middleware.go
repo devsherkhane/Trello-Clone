@@ -1,15 +1,15 @@
 package auth
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/devsherkhane/trello-clone/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(userRepo repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		var tokenString string
@@ -27,7 +27,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			// Use the helper function here
 			return getSecretKey(), nil
 		})
 
@@ -36,9 +35,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Store UserID in context for other handlers to use
+		// Verify user still exists in DB (handles cases where DB was reset)
+		_, err = userRepo.GetByID(claims.UserID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User no longer exists"})
+			return
+		}
+
+		// Store UserID in context
 		c.Set("userID", claims.UserID)
-		log.Printf("AUTH MIDDLEWARE: User recognized as %d", claims.UserID)
 		c.Next()
 	}
 }

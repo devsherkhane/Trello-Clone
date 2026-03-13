@@ -1,0 +1,11 @@
+Field	Type	Null	Key	Default	Extra
+id	int	NO	PRI	NULL	auto_increment
+username	varchar(255)	NO	UNI	NULL	
+email	varchar(255)	NO	UNI	NULL	
+password_hash	varchar(255)	NO		NULL	
+theme	varchar(50)	YES		light	
+avatar_url	varchar(255)	YES		NULL	
+reset_token	varchar(255)	YES			
+reset_expires	timestamp	YES		NULL	
+created_at	timestamp	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+updated_at	timestamp	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP

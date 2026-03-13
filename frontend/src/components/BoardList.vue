@@ -104,7 +104,7 @@ const onSubmitCard = () => {
   font-weight: bold;
   width: 80%;
   font-size: 16px;
-  color: #172b4d;
+  color: var(--text-main);
 }
 
 .btn-delete-list {
@@ -190,7 +190,7 @@ const onSubmitCard = () => {
 
 .add-card-form textarea {
   width: 100%;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: var(--border-radius-sm);
   padding: 12px;
   margin-bottom: 8px;
@@ -203,7 +203,7 @@ const onSubmitCard = () => {
 .add-card-form textarea:focus {
   outline: none;
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .form-actions {

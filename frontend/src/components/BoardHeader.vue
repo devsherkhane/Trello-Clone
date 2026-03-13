@@ -190,7 +190,7 @@ const onSearch = () => {
   background: var(--surface-primary);
   border-color: var(--brand-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .search-results-dropdown {

@@ -364,7 +364,7 @@ h2 {
   box-shadow: var(--shadow-soft);
   position: relative;
   overflow: hidden;
-  background-image: radial-gradient(circle at top right, rgba(20, 184, 166, 0.05), transparent);
+  background-image: radial-gradient(circle at top right, rgba(124, 58, 237, 0.05), transparent);
 }
 
 [data-theme="dark"] .board-tile {
@@ -407,7 +407,7 @@ h2 {
 }
 
 .create-tile {
-  background: rgba(20, 184, 166, 0.03);
+  background: rgba(124, 58, 237, 0.03);
   border: 2px dashed var(--brand-primary);
   align-items: center;
   justify-content: center;
@@ -502,7 +502,7 @@ h2 {
 .modal-content input {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: var(--border-radius-sm);
   background: transparent;
   color: var(--text-primary);
@@ -513,8 +513,8 @@ h2 {
 
 .modal-content input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .modal-actions {
@@ -540,7 +540,7 @@ h2 {
 }
 
 .btn-create {
-  background: var(--primary-color);
+  background: var(--brand-primary);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -552,7 +552,7 @@ h2 {
 }
 
 .btn-create:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: var(--brand-primary-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }

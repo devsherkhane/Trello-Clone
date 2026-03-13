@@ -1,74 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 :root {
-  /* Brand Colors - Vibrant Aurora (Teal & Indigo) */
-  --brand-primary: #14b8a6;
-  /* Teal 500 */
-  --brand-primary-hover: #0d9488;
-  /* Teal 600 */
-  --brand-secondary: #6366f1;
-  /* Indigo 500 */
-  --brand-accent: #f43f5e;
-  /* Rose 500 */
+  /* ═══════════════════════════════════════════════
+     🎨 ROYAL VIOLET — Premium Design System
+     A deep violet primary with warm amber accents
+     ═══════════════════════════════════════════════ */
 
-  /* Semantic Backgrounds - Fresh Sky Wash */
-  --bg-app: #0079bf;  
-  /* Sky 50 */
-  --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ccfbf1 100%);
+  /* Brand Colors */
+  --brand-primary: #7c3aed;         /* Violet 600 */
+  --brand-primary-hover: #6d28d9;   /* Violet 700 */
+  --brand-primary-light: #ede9fe;   /* Violet 100 */
+  --brand-secondary: #f59e0b;       /* Amber 500 */
+  --brand-accent: #ec4899;          /* Pink 500 */
+
+  /* Backgrounds */
+  --bg-app: #faf5ff;
+  --bg-gradient: linear-gradient(135deg, #faf5ff 0%, #ede9fe 40%, #fce7f3 100%);
   --surface-primary: #ffffff;
-  --surface-secondary: #ecfeff;
-  /* Cyan 50 */
-  --surface-glass: rgba(255, 255, 255, 0.6);
+  --surface-secondary: #f5f3ff;     /* Violet 50 */
+  --surface-glass: rgba(255, 255, 255, 0.72);
 
-  /* Text Colors - High Energy Slate */
-  --text-main: #0f172a;
-  /* Slate 900 */
-  --text-muted: #475569;
-  /* Slate 600 */
-  --text-extramuted: #94a3b8;
-  /* Slate 400 */
+  /* Text Colors */
+  --text-main: #1e1b4b;             /* Indigo 950 */
+  --text-muted: #6b7280;            /* Gray 500 */
+  --text-extramuted: #9ca3af;       /* Gray 400 */
   --text-on-brand: #ffffff;
 
-  /* Borders & Shadows - Vibrant Softness */
-  --border-subtle: rgba(20, 184, 166, 0.1);
+  /* Borders & Shadows */
+  --border-subtle: rgba(124, 58, 237, 0.1);
   --border-radius: 16px;
   --border-radius-sm: 10px;
-  --shadow-soft: 0 4px 20px -2px rgba(20, 184, 166, 0.1);
-  --shadow-strong: 0 10px 25px -5px rgba(20, 184, 166, 0.15);
+  --shadow-soft: 0 4px 20px -2px rgba(124, 58, 237, 0.08);
+  --shadow-strong: 0 10px 30px -5px rgba(124, 58, 237, 0.12);
+  --shadow-md: 0 8px 24px -4px rgba(124, 58, 237, 0.15);
 
-  /* Trello specific */
-  --trello-list: rgba(241, 245, 249, 0.8);
+  /* Board-specific */
+  --trello-list: rgba(245, 243, 255, 0.85);
   --trello-card: #ffffff;
-  --card-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --card-shadow: 0 2px 8px rgba(30, 27, 75, 0.06);
 }
 
 [data-theme="dark"] {
-  /* Semantic Backgrounds - Midnight Aurora */
-  --bg-app: #020617;
-  /* Slate 950 */
-  --bg-gradient: radial-gradient(circle at top left, #0f172a, #020617 70%);
-  --surface-primary: #0f172a;
-  /* Slate 900 */
-  --surface-secondary: #1e293b;
-  /* Slate 800 */
-  --surface-glass: rgba(15, 23, 42, 0.7);
+  /* Backgrounds */
+  --bg-app: #0c0a1d;
+  --bg-gradient: radial-gradient(ellipse at top left, #1e1b4b, #0c0a1d 70%);
+  --surface-primary: #1e1b4b;
+  --surface-secondary: #2e1065;
+  --surface-glass: rgba(30, 27, 75, 0.72);
 
   /* Text Colors */
-  --text-main: #f8fafc;
-  /* Slate 50 */
-  --text-muted: #94a3b8;
-  /* Slate 400 */
-  --text-extramuted: #64748b;
-  /* Slate 500 */
+  --text-main: #f5f3ff;
+  --text-muted: #a78bfa;
+  --text-extramuted: #7c3aed;
 
   /* Borders & Shadows */
-  --border-subtle: rgba(45, 212, 191, 0.1);
-  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.6);
-  --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.8);
+  --border-subtle: rgba(167, 139, 250, 0.15);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.7);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
 
-  /* Trello specific */
-  --trello-list: rgba(15, 23, 42, 0.6);
-  --trello-card: #1e293b;
+  /* Board-specific */
+  --trello-list: rgba(30, 27, 75, 0.65);
+  --trello-card: #2e1065;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
+
+/* ═══════════════════════════════════════════════
+   Global Reset & Base
+   ═══════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
@@ -85,23 +84,26 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base Utility Classes */
+/* ═══════════════════════════════════════════════
+   Utility Buttons
+   ═══════════════════════════════════════════════ */
+
 .btn-primary {
-  background: var(--brand-primary);
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
   color: var(--text-on-brand);
   border: none;
   padding: 10px 16px;
   border-radius: var(--border-radius-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-soft);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
 }
 
 .btn-primary:hover {
-  background: var(--brand-primary-hover);
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-strong);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
 }
 
 .btn-danger {
@@ -129,13 +131,15 @@ body {
   box-shadow: var(--shadow-strong);
 }
 
-/* Animations */
+/* ═══════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);

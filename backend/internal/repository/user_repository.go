@@ -31,41 +31,53 @@ func (r *userRepository) Create(username, email, passwordHash string) (int64, er
 }
 
 func (r *userRepository) GetByEmail(email string) (*models.User, error) {
-	query := "SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE email = ?"
+	query := "SELECT id, username, email, password_hash, reset_token, reset_expires, created_at, updated_at FROM users WHERE email = ?"
 	var u models.User
-	err := r.db.QueryRow(query, email).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+	var resetToken sql.NullString
+	var resetExpires sql.NullTime
+	err := r.db.QueryRow(query, email).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &resetToken, &resetExpires, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
+	u.ResetToken = resetToken.String
+	u.ResetExpires = resetExpires.Time
 	return &u, nil
 }
 
 func (r *userRepository) GetByID(id int) (*models.User, error) {
-	query := "SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id = ?"
+	query := "SELECT id, username, email, password_hash, reset_token, reset_expires, created_at, updated_at FROM users WHERE id = ?"
 	var u models.User
-	err := r.db.QueryRow(query, id).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+	var resetToken sql.NullString
+	var resetExpires sql.NullTime
+	err := r.db.QueryRow(query, id).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &resetToken, &resetExpires, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
+	u.ResetToken = resetToken.String
+	u.ResetExpires = resetExpires.Time
 	return &u, nil
 }
 
 func (r *userRepository) GetByResetToken(token string) (*models.User, error) {
-	query := "SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE reset_token = ? AND reset_expires > NOW()"
+	query := "SELECT id, username, email, password_hash, reset_token, reset_expires, created_at, updated_at FROM users WHERE reset_token = ? AND reset_expires > NOW()"
 	var u models.User
-	err := r.db.QueryRow(query, token).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+	var resetToken sql.NullString
+	var resetExpires sql.NullTime
+	err := r.db.QueryRow(query, token).Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &resetToken, &resetExpires, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
+	u.ResetToken = resetToken.String
+	u.ResetExpires = resetExpires.Time
 	return &u, nil
 }
 

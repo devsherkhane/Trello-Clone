@@ -5,13 +5,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/devsherkhane/trello-clone/internal/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthMiddleware(t *testing.T) {
+	mockUserRepo := new(mocks.MockUserRepository)
+
 	r := gin.New()
-	r.Use(AuthMiddleware())
+	r.Use(AuthMiddleware(mockUserRepo))
 	r.GET("/test", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})

@@ -42,3 +42,11 @@ func (m *MockAuthService) UpdateProfile(userID int, username, newEmail string) (
 	}
 	return nil, args.Error(1)
 }
+
+func (m *MockAuthService) GetUserByID(userID int) (*models.User, error) {
+	args := m.Called(userID)
+	if args.Get(0) != nil {
+		return args.Get(0).(*models.User), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
