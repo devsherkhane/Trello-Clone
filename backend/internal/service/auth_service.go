@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/devsherkhane/trello-clone/internal/models"
-	"github.com/devsherkhane/trello-clone/internal/repository"
-	"github.com/devsherkhane/trello-clone/internal/utils"
+	"github.com/devsherkhane/drift/internal/models"
+	"github.com/devsherkhane/drift/internal/repository"
+	"github.com/devsherkhane/drift/internal/utils"
 )
 
 type AuthService interface {

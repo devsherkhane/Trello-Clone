@@ -3,7 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/devsherkhane/trello-clone/internal/auth"
+	"github.com/devsherkhane/drift/internal/auth"
 )
 
 // GenerateJWT acts as an adapter for the internal auth package generator

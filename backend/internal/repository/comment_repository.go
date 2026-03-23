@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/drift/internal/models"
 )
 
 type CommentRepository interface {

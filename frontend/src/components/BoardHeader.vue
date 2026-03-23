@@ -2,7 +2,7 @@
   <nav class="board-header glass-panel">
     <div class="header-left">
       <router-link to="/" class="brand-link" title="Dashboard">
-        <h2 class="brand">Trello Clone</h2>
+        <h2 class="brand">Drift</h2>
       </router-link>
       <div class="divider"></div>
       <h2 class="board-title">{{ boardTitle }}</h2>

@@ -5,9 +5,9 @@
         <div class="auth-header">
           <div class="logo-area">
               <div class="logo-box">
-                  <TrelloIcon :size="32" class="primary-icon" />
+                  <DriftIcon :size="32" class="primary-icon" />
               </div>
-              <h1>Trello Clone</h1>
+              <h1>Drift</h1>
           </div>
           <p class="auth-subtitle">Create your account and start organizing your projects beautifully.</p>
         </div>
@@ -63,7 +63,7 @@ import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { useToast } from "vue-toastification";
 import { 
-  Columns as TrelloIcon, 
+  Columns as DriftIcon, 
   User as UserIcon, 
   Mail as MailIcon, 
   Lock as LockIcon, 
@@ -86,7 +86,7 @@ const handleSignup = async () => {
   });
   
   if (result.success) {
-    toast.success("Welcome to Trello Clone!");
+    toast.success("Welcome to Drift!");
     router.push('/');
   } else {
     toast.error(result.message);

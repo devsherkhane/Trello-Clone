@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/drift/internal/models"
 )
 
 type ListRepository interface {
@@ -10,6 +10,7 @@ type ListRepository interface {
 	Create(boardID int, title string) (int64, error)
 	UpdateTitle(listID int, title string) error
 	Delete(listID int) error
+	GetByID(listID int) (*models.List, error)
 }
 
 type listRepository struct {
@@ -60,4 +61,14 @@ func (r *listRepository) UpdateTitle(listID int, title string) error {
 func (r *listRepository) Delete(listID int) error {
 	_, err := r.db.Exec("DELETE FROM lists WHERE id = ?", listID)
 	return err
+}
+
+func (r *listRepository) GetByID(listID int) (*models.List, error) {
+	query := "SELECT id, board_id, title, position FROM lists WHERE id = ?"
+	var l models.List
+	err := r.db.QueryRow(query, listID).Scan(&l.ID, &l.BoardID, &l.Title, &l.Position)
+	if err != nil {
+		return nil, err
+	}
+	return &l, nil
 }

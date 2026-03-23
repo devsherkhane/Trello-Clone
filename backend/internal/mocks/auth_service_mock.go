@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/drift/internal/models"
 	"github.com/stretchr/testify/mock"
 )
 

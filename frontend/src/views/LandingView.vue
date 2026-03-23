@@ -6,7 +6,7 @@
         <div class="nav-logo-box">
           <ColumnsIcon :size="24" />
         </div>
-        <span class="nav-logo-text">Trello Clone</span>
+        <span class="nav-logo-text">Drift</span>
       </div>
       <div class="nav-actions">
         <router-link to="/login" class="nav-link">Sign In</router-link>
@@ -31,7 +31,7 @@
           <span class="gradient-text">together.</span>
         </h1>
         <p class="hero-subtitle">
-          Trello Clone brings all your tasks, teammates, and tools together.
+          Drift brings all your tasks, teammates, and tools together.
           Keep everything in the same place — even if your team isn't.
         </p>
         <div class="hero-cta">
@@ -44,22 +44,7 @@
             Sign In
           </router-link>
         </div>
-        <div class="hero-stats">
-          <div class="stat-item">
-            <span class="stat-number">10K+</span>
-            <span class="stat-label">Active Users</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number">50K+</span>
-            <span class="stat-label">Boards Created</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number">99.9%</span>
-            <span class="stat-label">Uptime</span>
-          </div>
-        </div>
+
       </div>
     </section>
 
@@ -89,7 +74,7 @@
         </div>
         <div class="cta-content">
           <h2>Ready to get started?</h2>
-          <p>Join thousands of teams already using Trello Clone to ship products faster.</p>
+          <p>Join thousands of teams already using Drift to ship products faster.</p>
           <router-link to="/signup" class="btn-hero-primary">
             <ZapIcon :size="20" />
             Create Your Free Account
@@ -103,9 +88,9 @@
       <div class="footer-content">
         <div class="footer-brand">
           <ColumnsIcon :size="20" class="footer-logo-icon" />
-          <span>Trello Clone</span>
+          <span>Drift</span>
         </div>
-        <p class="footer-copy">&copy; 2026 Trello Clone. Built with ❤️ as a learning project.</p>
+        <p class="footer-copy">&copy; 2026 Drift. Built with ❤️ as a learning project.</p>
       </div>
     </footer>
   </div>
@@ -419,38 +404,8 @@ const features = [
   color: var(--brand-primary);
 }
 
-.hero-stats {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
-}
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
 
-.stat-number {
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--text-main);
-  letter-spacing: -1px;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background: var(--border-subtle);
-}
 
 /* Features */
 .features-section {

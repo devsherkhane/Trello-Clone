@@ -89,7 +89,7 @@ const onSubmitCard = () => {
 }
 
 .list-content {
-  background: var(--trello-list);
+  background: var(--drift-list);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
@@ -151,7 +151,7 @@ const onSubmitCard = () => {
 }
 
 .card {
-  background: var(--trello-card);
+  background: var(--drift-card);
   padding: 14px;
   margin-bottom: 12px;
   border-radius: 12px;

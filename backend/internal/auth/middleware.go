@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/devsherkhane/trello-clone/internal/repository"
+	"github.com/devsherkhane/drift/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )

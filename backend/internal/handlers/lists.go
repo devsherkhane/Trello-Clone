@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/devsherkhane/trello-clone/internal/middleware"
+	"github.com/devsherkhane/drift/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +27,7 @@ func (h *APIHandler) CreateList(c *gin.Context) {
 		return
 	}
 
-	list, err := h.ListService.CreateList(input.BoardID, input.Title)
+	list, err := h.ListService.CreateList(input.BoardID, userID, input.Title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create list"})
 		return
@@ -68,12 +68,8 @@ func (h *APIHandler) UpdateList(c *gin.Context) {
 		Title   string `json:"title" binding:"required,max=255"`
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"errors": middleware.FormatValidationErrors(err)})
-		return
-	}
-
-	err := h.ListService.UpdateListTitle(listID, input.Title)
+	userID := c.MustGet("userID").(int)
+	err := h.ListService.UpdateListTitle(listID, userID, input.Title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update list"})
 		return
@@ -85,7 +81,8 @@ func (h *APIHandler) UpdateList(c *gin.Context) {
 func (h *APIHandler) DeleteList(c *gin.Context) {
 	listID, _ := strconv.Atoi(c.Param("id"))
 
-	err := h.ListService.DeleteList(listID)
+	userID := c.MustGet("userID").(int)
+	err := h.ListService.DeleteList(listID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete list"})
 		return

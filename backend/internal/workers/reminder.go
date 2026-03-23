@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/devsherkhane/trello-clone/internal/database"
-	"github.com/devsherkhane/trello-clone/internal/utils"
+	"github.com/devsherkhane/drift/internal/database"
+	"github.com/devsherkhane/drift/internal/utils"
 )
 
 func StartReminderWorker() {

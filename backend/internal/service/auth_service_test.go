@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/devsherkhane/trello-clone/internal/mocks"
-	"github.com/devsherkhane/trello-clone/internal/models"
-	"github.com/devsherkhane/trello-clone/internal/service"
-	"github.com/devsherkhane/trello-clone/internal/utils"
+	"github.com/devsherkhane/drift/internal/mocks"
+	"github.com/devsherkhane/drift/internal/models"
+	"github.com/devsherkhane/drift/internal/service"
+	"github.com/devsherkhane/drift/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

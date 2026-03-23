@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/devsherkhane/trello-clone/internal/database"
+	"github.com/devsherkhane/drift/internal/database"
 	"github.com/gin-gonic/gin"
 )
 

@@ -3,7 +3,7 @@ package middleware
 import (
 	"time"
 
-	"github.com/devsherkhane/trello-clone/internal/logger"
+	"github.com/devsherkhane/drift/internal/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

@@ -1,4 +1,4 @@
-module github.com/devsherkhane/trello-clone
+module github.com/devsherkhane/drift
 
 go 1.18
 

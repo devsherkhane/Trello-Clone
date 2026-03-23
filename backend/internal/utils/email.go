@@ -29,7 +29,7 @@ func SendInvitationEmail(toEmail string, boardTitle string) error {
 }
 
 func SendResetEmail(toEmail string, token string) error {
-	subject := "Trello Clone Password Reset Request"
+	subject := "Drift Password Reset Request"
 	body := fmt.Sprintf("Use the following token to reset your password: %s", token)
 	return SendEmail(toEmail, subject, body)
 }

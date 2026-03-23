@@ -7,35 +7,45 @@
      ═══════════════════════════════════════════════ */
 
   /* Brand Colors */
-  --brand-primary: #6366f1;         /* Indigo 500 - More modern than basic violet */
-  --brand-primary-hover: #4f46e5;   /* Indigo 600 */
-  --brand-primary-light: #e0e7ff;   /* Indigo 100 */
-  --brand-secondary: #f59e0b;       /* Amber 500 */
-  --brand-accent: #10b981;          /* Emerald 500 - Professional accent */
+  --brand-primary: #6366f1;
+  /* Indigo 500 - More modern than basic violet */
+  --brand-primary-hover: #4f46e5;
+  /* Indigo 600 */
+  --brand-primary-light: #e0e7ff;
+  /* Indigo 100 */
+  --brand-secondary: #f59e0b;
+  /* Amber 500 */
+  --brand-accent: #10b981;
+  /* Emerald 500 - Professional accent */
 
   /* Backgrounds */
-  --bg-app: #f8fafc;                /* Slate 50 */
-  --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+  --bg-app: #f8fafc;
+  /* Slate 50 */
+  --bg-gradient: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
   /* Note: Above is a placeholder gradient, keeping the original for better compatibility */
   --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 40%, #e2e8f0 100%);
-  
+
   --surface-primary: #ffffff;
-  --surface-secondary: #f1f5f9;     /* Slate 100 */
+  --surface-secondary: #f1f5f9;
+  /* Slate 100 */
   --surface-glass: rgba(255, 255, 255, 0.6);
 
   /* Text Colors */
-  --text-main: #0f172a;             /* Slate 900 */
-  --text-muted: #475569;            /* Slate 600 */
-  --text-extramuted: #94a3b8;       /* Slate 400 */
+  --text-main: #0f172a;
+  /* Slate 900 */
+  --text-muted: #475569;
+  /* Slate 600 */
+  --text-extramuted: #94a3b8;
+  /* Slate 400 */
   --text-on-brand: #ffffff;
 
   /* Borders & Shadows */
   --border-subtle: rgba(0, 0, 0, 0.05);
   --border-radius: 12px;
   --border-radius-sm: 8px;
-  
+
   /* Modern Layered Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -43,16 +53,18 @@
   --shadow-strong: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* Board-specific */
-  --trello-list: rgba(241, 245, 249, 0.7);
-  --trello-card: #ffffff;
+  --drift-list: rgba(241, 245, 249, 0.7);
+  --drift-card: #ffffff;
   --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
 [data-theme="dark"] {
   /* Backgrounds */
-  --bg-app: #0f172a;               /* Slate 900 */
+  --bg-app: #0f172a;
+  /* Slate 900 */
   --bg-gradient: radial-gradient(at 0% 0%, #1e293b 0, #0f172a 70%);
-  --surface-primary: #1e293b;      /* Slate 800 */
+  --surface-primary: #1e293b;
+  /* Slate 800 */
   --surface-secondary: #0f172a;
   --surface-glass: rgba(30, 41, 59, 0.7);
 
@@ -68,8 +80,8 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
 
   /* Board-specific */
-  --trello-list: rgba(15, 23, 42, 0.7);
-  --trello-card: #1e293b;
+  --drift-list: rgba(15, 23, 42, 0.7);
+  --drift-card: #1e293b;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -148,6 +160,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

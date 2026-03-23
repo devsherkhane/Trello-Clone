@@ -5,9 +5,9 @@
                 <div class="auth-header">
                     <div class="logo-area">
                         <div class="logo-box">
-                            <TrelloIcon :size="32" class="primary-icon" />
+                            <DriftIcon :size="32" class="primary-icon" />
                         </div>
-                        <h1>Trello Clone</h1>
+                        <h1>Drift</h1>
                     </div>
                     <p class="auth-subtitle">Welcome back. Enter your credentials to access your workspace.</p>
                 </div>
@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="auth-footer-refined">
-                        <p>New to Trello Clone? <router-link to="/signup" class="brand-link">Create an account</router-link></p>
+                        <p>New to Drift? <router-link to="/signup" class="brand-link">Create an account</router-link></p>
                     </div>
                 </form>
             </div>
@@ -65,7 +65,7 @@ import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { 
-  Columns as TrelloIcon, 
+  Columns as DriftIcon, 
   Mail as MailIcon, 
   Lock as LockIcon, 
   LogIn as LogInIcon,

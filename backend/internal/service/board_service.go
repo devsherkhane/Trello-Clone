@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/devsherkhane/trello-clone/internal/models"
-	"github.com/devsherkhane/trello-clone/internal/repository"
+	"github.com/devsherkhane/drift/internal/models"
+	"github.com/devsherkhane/drift/internal/repository"
+	"github.com/devsherkhane/drift/internal/utils"
 )
 
 type BoardService interface {
@@ -33,6 +34,7 @@ func (s *boardService) CreateBoard(title string, userID int) (*models.Board, err
 	if err != nil {
 		return nil, err
 	}
+	utils.LogActivity(userID, int(id), "created board "+title)
 	return &models.Board{ID: int(id), Title: title, UserID: userID}, nil
 }
 
@@ -45,15 +47,28 @@ func (s *boardService) GetBoardByID(boardID, userID int) (*models.Board, error) 
 }
 
 func (s *boardService) UpdateBoardTitle(boardID, userID int, title string) error {
-	return s.boardRepo.UpdateTitle(boardID, userID, title)
+	err := s.boardRepo.UpdateTitle(boardID, userID, title)
+	if err != nil {
+		return err
+	}
+	utils.LogActivity(userID, boardID, "renamed board to "+title)
+	return nil
 }
 
 func (s *boardService) DeleteBoard(boardID, userID int) error {
-	return s.boardRepo.Delete(boardID, userID)
+	err := s.boardRepo.Delete(boardID, userID)
+	if err == nil {
+		utils.LogActivity(userID, boardID, "deleted the board")
+	}
+	return err
 }
 
 func (s *boardService) ArchiveBoard(boardID, userID int) error {
-	return s.boardRepo.Archive(boardID, userID)
+	err := s.boardRepo.Archive(boardID, userID)
+	if err == nil {
+		utils.LogActivity(userID, boardID, "archived the board")
+	}
+	return err
 }
 
 func (s *boardService) GetActivityLogs(boardID int) ([]models.ActivityLog, error) {
@@ -70,7 +85,12 @@ func (s *boardService) AddCollaborator(boardID, userID int, email, role string) 
 		return repository.ErrNotFound // Pretend board doesn't exist for unauthorized access
 	}
 
-	return s.boardRepo.AddCollaborator(boardID, email, role)
+	err = s.boardRepo.AddCollaborator(boardID, email, role)
+	if err != nil {
+		return err
+	}
+	utils.LogActivity(userID, boardID, "added "+email+" as "+role)
+	return nil
 }
 
 func (s *boardService) GetCollaborators(boardID int) ([]models.User, error) {

@@ -1,0 +1,60 @@
+services:
+  # ---- MySQL Database ----
+  - type: database
+    name: drift-db
+    databaseName: drift
+    user: drift_user
+    plan: free
+
+  # ---- Go Backend ----
+  - type: web
+    name: drift-backend
+    env: go
+    buildCommand: cd backend && go build -o server .
+    startCommand: ./backend/server
+    plan: free
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: drift-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: drift-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: drift-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: drift-db
+          property: database
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: 10000
+
+  # ---- Vue Frontend ----
+  - type: static
+    name: drift-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: drift-backend
+          type: web
+          property: url
+        suffix: /api
+      - key: VITE_WS_URL
+        fromService:
+          name: drift-backend
+          type: web
+          property: url
+        replace:
+          - from: https://
+            to: wss://
+        suffix: /api/ws

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/devsherkhane/trello-clone/internal/middleware"
+	"github.com/devsherkhane/drift/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 

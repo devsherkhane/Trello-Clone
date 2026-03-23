@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/devsherkhane/trello-clone/internal/database"
-	"github.com/devsherkhane/trello-clone/internal/logger"
+	"github.com/devsherkhane/drift/internal/database"
+	"github.com/devsherkhane/drift/internal/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

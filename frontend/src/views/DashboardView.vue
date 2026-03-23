@@ -2,7 +2,7 @@
   <main class="content animate-fade-in">
     <nav class="board-header">
       <div class="header-left">
-        <h1 class="brand-name">Trello Clone</h1>
+        <h1 class="brand-name">Drift</h1>
       </div>
       <div class="header-right">
         <router-link to="/search" class="btn-icon-nav" title="Search">

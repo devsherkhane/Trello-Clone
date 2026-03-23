@@ -6,14 +6,14 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/devsherkhane/trello-clone/internal/auth"
-	"github.com/devsherkhane/trello-clone/internal/database"
-	"github.com/devsherkhane/trello-clone/internal/handlers"
-	"github.com/devsherkhane/trello-clone/internal/logger"
-	"github.com/devsherkhane/trello-clone/internal/middleware"
-	"github.com/devsherkhane/trello-clone/internal/notifications"
-	"github.com/devsherkhane/trello-clone/internal/repository"
-	"github.com/devsherkhane/trello-clone/internal/service"
+	"github.com/devsherkhane/drift/internal/auth"
+	"github.com/devsherkhane/drift/internal/database"
+	"github.com/devsherkhane/drift/internal/handlers"
+	"github.com/devsherkhane/drift/internal/logger"
+	"github.com/devsherkhane/drift/internal/middleware"
+	"github.com/devsherkhane/drift/internal/notifications"
+	"github.com/devsherkhane/drift/internal/repository"
+	"github.com/devsherkhane/drift/internal/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -21,9 +21,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title Trello Clone API
+// @title Drift API
 // @version 1.0
-// @description Backend API for Trello Clone with Boards, Lists, Cards, and Real-time updates.
+// @description Backend API for Drift with Boards, Lists, Cards, and Real-time updates.
 // @host localhost:8080
 // @BasePath /api
 
@@ -37,7 +37,7 @@ func main() {
 	logger.SetupLogging()
 	defer logger.Sync()
 
-	logger.Log.Info("Starting Trello Clone API server...")
+	logger.Log.Info("Starting Drift API server...")
 	
 	// Initialize database
 	database.InitDB()
@@ -57,7 +57,7 @@ func main() {
 	authSvc := service.NewAuthService(userRepo)
 	boardSvc := service.NewBoardService(boardRepo)
 	listSvc := service.NewListService(listRepo)
-	cardSvc := service.NewCardService(cardRepo)
+	cardSvc := service.NewCardService(cardRepo, listRepo)
 	commentSvc := service.NewCommentService(commentRepo)
 	attachmentSvc := service.NewAttachmentService(attachmentRepo)
 	labelSvc := service.NewLabelService(labelRepo)

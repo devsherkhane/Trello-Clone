@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/devsherkhane/trello-clone/internal/middleware"
+	"github.com/devsherkhane/drift/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +19,8 @@ func (h *APIHandler) CreateCard(c *gin.Context) {
 		return
 	}
 
-	card, err := h.CardService.CreateCard(input.ListID, input.Title)
+	userID := c.MustGet("userID").(int)
+	card, err := h.CardService.CreateCard(input.ListID, userID, input.Title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create card"})
 		return
@@ -70,7 +71,8 @@ func (h *APIHandler) UpdateCard(c *gin.Context) {
 	card.DueDate = input.DueDate
 	card.LabelColor = input.LabelColor
 
-	err = h.CardService.UpdateCard(card)
+	userID := c.MustGet("userID").(int)
+	err = h.CardService.UpdateCard(card, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update card"})
 		return
@@ -92,7 +94,8 @@ func (h *APIHandler) MoveCard(c *gin.Context) {
 		return
 	}
 
-	err := h.CardService.MoveCard(cardID, input.NewListID, input.NewPosition)
+	userID := c.MustGet("userID").(int)
+	err := h.CardService.MoveCard(cardID, userID, input.NewListID, input.NewPosition)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to move card"})
 		return
@@ -104,7 +107,8 @@ func (h *APIHandler) MoveCard(c *gin.Context) {
 func (h *APIHandler) DeleteCard(c *gin.Context) {
 	cardID, _ := strconv.Atoi(c.Param("id"))
 
-	err := h.CardService.DeleteCard(cardID)
+	userID := c.MustGet("userID").(int)
+	err := h.CardService.DeleteCard(cardID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete card"})
 		return

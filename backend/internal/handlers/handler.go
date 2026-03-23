@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/devsherkhane/trello-clone/internal/service"
+	"github.com/devsherkhane/drift/internal/service"
 )
 
 type APIHandler struct {

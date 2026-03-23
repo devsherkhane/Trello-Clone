@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/drift/internal/models"
 )
 
 var ErrNotFound = errors.New("resource not found")
@@ -136,7 +136,7 @@ func (r *boardRepository) Archive(boardID, userID int) error {
 
 func (r *boardRepository) GetActivityLogs(boardID int) ([]models.ActivityLog, error) {
 	query := `
-		SELECT id, board_id, user_id, action, created_at 
+		SELECT id, board_id, user_id, action_text, created_at 
 		FROM activity_logs 
 		WHERE board_id = ? 
 		ORDER BY created_at DESC LIMIT 50

@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/devsherkhane/trello-clone/internal/handlers"
-	"github.com/devsherkhane/trello-clone/internal/mocks"
-	"github.com/devsherkhane/trello-clone/internal/models"
+	"github.com/devsherkhane/drift/internal/handlers"
+	"github.com/devsherkhane/drift/internal/mocks"
+	"github.com/devsherkhane/drift/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )

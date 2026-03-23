@@ -5,7 +5,8 @@ export const useWebsocket = () => {
 
   const connect = (boardId) => {
     const token = localStorage.getItem('token');
-    socket = new WebSocket(`ws://localhost:8080/api/ws?boardID=${boardId}&token=${token}`);
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/api/ws';
+    socket = new WebSocket(`${wsUrl}?boardID=${boardId}&token=${token}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);

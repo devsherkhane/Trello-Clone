@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/devsherkhane/trello-clone/internal/middleware"
-	"github.com/devsherkhane/trello-clone/internal/utils"
+	"github.com/devsherkhane/drift/internal/middleware"
+	"github.com/devsherkhane/drift/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
