@@ -34,9 +34,9 @@ services:
         value: 10000
 
   # ---- Vue Frontend ----
-  - type: static
+  - type: web
     name: drift-frontend
-    env: static
+    runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     plan: free
