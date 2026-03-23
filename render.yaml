@@ -1,6 +1,6 @@
 services:
   # ---- MySQL Database (Docker) ----
-  - type: privateService
+  - type: pserv
     name: drift-db
     env: docker
     dockerContext: .
